@@ -198,7 +198,7 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
 }
 
 /* ---------- 配置画面 ---------- */
-.placegrid{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(270px,32vw,380px); gap:clamp(8px,1.6vw,20px)}
+.placegrid{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(270px,32vw,380px); grid-template-rows:minmax(0,1fr); gap:clamp(8px,1.6vw,20px)}
 .side{display:flex; flex-direction:column; justify-content:space-between; gap:clamp(4px,1vh,10px)}
 .side h2{margin:0; font-size:clamp(15px,3vh,26px); font-weight:900; color:var(--hot-d)}
 .side .soft{margin:0; color:var(--soft); font-weight:700; font-size:clamp(12px,2.1vh,17px); line-height:1.4}
@@ -212,19 +212,21 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
 
 /* ---------- 対戦画面 ---------- */
-.battle{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(240px,25vw,330px) minmax(0,1fr); gap:clamp(8px,1.5vw,20px)}
-.panel{display:flex; flex-direction:column; justify-content:center; gap:clamp(5px,1.3vh,14px); overflow:hidden}
+.battle{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(240px,25vw,330px) minmax(0,1fr); grid-template-rows:minmax(0,1fr); gap:clamp(8px,1.5vw,20px)}
+.panel{display:flex; flex-direction:column; justify-content:center; gap:clamp(4px,1vh,12px); overflow:hidden}
 .turn{
   align-self:center; padding:.25em 1em; border-radius:999px; color:#fff; font-weight:900; font-size:clamp(14px,2.7vh,23px);
   background:linear-gradient(180deg,#5cc9f5,#1a9be0); box-shadow:0 4px 0 var(--blue-d); text-shadow:0 2px 0 rgba(0,60,120,.4);
 }
 .turn.t1{background:linear-gradient(180deg,#ff9a4d,#ff6a2b); box-shadow:0 4px 0 var(--hot-d); text-shadow:0 2px 0 rgba(150,50,0,.45)}
-.eq{text-align:center; font-weight:900; font-size:clamp(26px,6.2vh,54px); line-height:1.1}
+.yomi{text-align:center; font-weight:900; font-size:clamp(16px,3.8vh,32px); color:var(--blue-d); letter-spacing:.08em; line-height:1.2}
+.yomi .a{color:var(--hot-d); margin-left:.5em}
+.eq{text-align:center; font-weight:900; font-size:clamp(24px,5.6vh,50px); line-height:1.1}
 .eq .ans{display:inline-block; min-width:1.7em; border-bottom:.12em solid var(--sun); color:var(--hot-d)}
 .keys{display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(5px,1vh,10px)}
 .key{
   --sh:#9cc3e6; font:inherit; font-weight:900; font-size:clamp(18px,3.5vh,30px);
-  height:clamp(36px,7vh,62px); border:0; border-radius:16px; background:#fff; color:var(--ink);
+  height:clamp(32px,6.2vh,58px); border:0; border-radius:16px; background:#fff; color:var(--ink);
   box-shadow:0 4px 0 var(--sh), 0 6px 10px rgba(0,40,90,.18); cursor:pointer;
 }
 .key:active{transform:translateY(3px); box-shadow:0 1px 0 var(--sh)}
@@ -340,6 +342,24 @@ const who = p => isCpu(p) ? 'コンピュータ' : nm(p) + 'さん';
 const emptyGrid = () => Array.from({length: N}, () => Array(N).fill(null));
 const newStats = () => ({attacks: 0, hit: 0, miss: 0, wrong: 0, sunk: 0});
 const rand = n => Math.floor(Math.random() * n);
+
+/* ---------- 九九の読み方（ひらがな） ---------- */
+const KUKU = {
+  1: ['いんいちが|いち','いんにが|に','いんさんが|さん','いんしが|し','いんごが|ご','いんろくが|ろく','いんしちが|しち','いんはちが|はち','いんくが|く'],
+  2: ['にいちが|に','ににんが|し','にさんが|ろく','にしが|はち','にご|じゅう','にろく|じゅうに','にしち|じゅうし','にはち|じゅうろく','にく|じゅうはち'],
+  3: ['さんいちが|さん','さんにが|ろく','さざんが|く','さんし|じゅうに','さんご|じゅうご','さぶろく|じゅうはち','さんしち|にじゅういち','さんぱ|にじゅうし','さんく|にじゅうしち'],
+  4: ['しいちが|し','しにが|はち','しさん|じゅうに','しし|じゅうろく','しご|にじゅう','しろく|にじゅうし','ししち|にじゅうはち','しは|さんじゅうに','しく|さんじゅうろく'],
+  5: ['ごいちが|ご','ごに|じゅう','ごさん|じゅうご','ごし|にじゅう','ごご|にじゅうご','ごろく|さんじゅう','ごしち|さんじゅうご','ごは|しじゅう','ごく|しじゅうご'],
+  6: ['ろくいちが|ろく','ろくに|じゅうに','ろくさん|じゅうはち','ろくし|にじゅうし','ろくご|さんじゅう','ろくろく|さんじゅうろく','ろくしち|しじゅうに','ろくは|しじゅうはち','ろっく|ごじゅうし'],
+  7: ['しちいちが|しち','しちに|じゅうし','しちさん|にじゅういち','しちし|にじゅうはち','しちご|さんじゅうご','しちろく|しじゅうに','しちしち|しじゅうく','しちは|ごじゅうろく','しちく|ろくじゅうさん'],
+  8: ['はちいちが|はち','はちに|じゅうろく','はちさん|にじゅうし','はちし|さんじゅうに','はちご|しじゅう','はちろく|しじゅうはち','はちしち|ごじゅうろく','はっぱ|ろくじゅうし','はっく|しちじゅうに'],
+  9: ['くいちが|く','くに|じゅうはち','くさん|にじゅうしち','くし|さんじゅうろく','くご|しじゅうご','くろく|ごじゅうし','くしち|ろくじゅうさん','くは|しちじゅうに','くく|はちじゅういち']
+};
+/* a＝かけられる数（だん）、b＝かける数 → {q: 式の読み, ans: 答えの読み} */
+function yomi(a, b) {
+  const [q, ans] = KUKU[a][b - 1].split('|');
+  return {q, ans};
+}
 
 /* ---------- 効果音（WebAudioで作る） ---------- */
 let AC = null;
@@ -597,6 +617,7 @@ function panelHTML() {
     const keys = [7, 8, 9, 4, 5, 6, 1, 2, 3].map(n => `<button class="key" data-act="key" data-v="${n}">${n}</button>`).join('');
     return `${turnBadge}
       ${defend ? '<p class="hint" style="font-size:clamp(12px,2.2vh,18px)">🤖 ここをねらってる！<br>九九にこたえると、こうげきがとどくよ！</p>' : ''}
+      <div class="yomi">${yomi(a, b).q}</div>
       <div class="eq">${a} × ${b} = <span class="ans">${S.input || '?'}</span></div>
       <div class="keys">${keys}
         <button class="key" data-act="del">⌫</button>
@@ -639,7 +660,8 @@ function panelHTML() {
     label = cpu ? 'つぎへ' : 'もういちど こうげき！';
   }
   else label = isCpu(1 - p) ? 'コンピュータの番へ' : (cpu ? 'つぎは あなたの番' : `つぎは${who(1 - p)}の番`);
-  return `${turnBadge}<div class="rbig ${cls}">${big}</div><p class="rtext">${text}</p>
+  const y = yomi(a, b);
+  return `${turnBadge}<div class="rbig ${cls}">${big}</div><div class="yomi">${y.q}<span class="a">${y.ans}</span></div><p class="rtext">${text}</p>
     <div style="text-align:center"><button class="btn hot" data-act="next">${label}</button></div>`;
 }
 
