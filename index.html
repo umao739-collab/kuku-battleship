@@ -136,8 +136,11 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
 .board{
   width:min(100cqw,100cqh); height:min(100cqw,100cqh);
   container-type:inline-size;
-  display:grid; grid-template-columns:repeat(10,1fr); grid-template-rows:repeat(10,1fr); gap:.5cqw;
+  display:grid; grid-template-columns:.62fr repeat(10,1fr); grid-template-rows:.62fr repeat(10,1fr); gap:.5cqw;
 }
+.cap-top,.cap-left{display:grid; place-items:center; font-weight:900; font-size:3.4cqw; white-space:nowrap}
+.cap-top{grid-column:2/-1; grid-row:1; color:var(--hot-d); letter-spacing:.25em}
+.cap-left{grid-column:1; grid-row:2/-1; color:var(--blue-d); writing-mode:vertical-rl; text-orientation:upright; letter-spacing:.12em}
 .hd,.corner{
   display:grid; place-items:center; border-radius:22%;
   background:linear-gradient(180deg,#ffe58a,#ffc83d); color:#7a4300; font-weight:900; font-size:4.6cqw;
@@ -331,7 +334,8 @@ const S = {
   fx: '',
   timer: null,
   again: false,   // あたったので、もう一回こうげき中
-  modal: null
+  modal: null,
+  retry: false    // コンピュータの問題をまちがえた（やり直し中）
 };
 
 const $app = document.getElementById('app');
@@ -442,7 +446,7 @@ function randomPlace() {
 function boardHTML(o) {
   const map = Array.from({length: N}, () => Array(N).fill(null));
   (o.ships || []).forEach(s => s.cells.forEach(([r, c]) => { map[r][c] = s; }));
-  let h = '<div class="board"><div class="corner">九九<br>表</div>';
+  let h = '<div class="board"><div style="grid-column:1;grid-row:1"></div><div class="cap-top">かける数</div><div class="cap-left">かけられる数</div><div class="corner">九九<br>表</div>';
   for (let c = 0; c < N; c++) h += `<div class="hd">${c + 1}</div>`;
   for (let r = 0; r < N; r++) {
     h += `<div class="hd">${r + 1}</div>`;
@@ -509,7 +513,7 @@ function viewTitle() {
        <li>先に相手の潜水艦<b>5隻</b>をぜんぶ沈めたら勝ち！</li>`
     : `<li>まず、自分の潜水艦をかくそう。</li>
        <li><b>自分の番</b>：相手の海のマスをタップして、そのマスの九九の答えを入れてこうげき！ <b>あたったら、もう一回</b>！</li>
-       <li><b>コンピュータの番</b>：コンピュータがえらんだマスの九九にこたえよう。こたえると、こうげきがとどくよ。</li>
+       <li><b>コンピュータの番</b>：コンピュータがえらんだマスの九九にこたえよう。まちがえても<b>やり直せる</b>よ。せいかいすると、こうげきがとどくよ。</li>
        <li>先に相手の潜水艦<b>5隻</b>をぜんぶ沈めたら勝ち！</li>`;
   return `<div class="fab">${soundBtn()}</div><main class="main"><div class="titlegrid">
     <div class="hero">
@@ -602,7 +606,7 @@ function seaCard(q) {
 function panelHTML() {
   const p = S.turn;
   const turnBadge = `<div class="turn ${p === 1 ? 't1' : ''}">${isCpu(p) ? '🤖' : '🎯'} ${who(p)}の番</div>` + (S.again && S.sub !== 'result' ? '<div class="again">🔥 あたったから もう一回！</div>' : '');
-  const axis = '<div class="mini">ヨコ＝かけられる数　タテ＝かける数</div>';
+  const axis = '<div class="mini">左の数＝かけられる数　上の数＝かける数</div>';
 
   if (S.sub === 'cpu') {
     return `${turnBadge}<div class="think">🤖 どこをねらおうかな<span>.</span><span>.</span><span>.</span></div>${axis}`;
@@ -613,10 +617,12 @@ function panelHTML() {
     if (!S.sel) {
       return `${turnBadge}<p class="hint">光っている<br>「${who(1 - p)}の海」の<br>マスをタップして、<br>そのマスの九九の答えを<br>こたえよう！</p>${axis}`;
     }
-    const a = S.sel.c + 1, b = S.sel.r + 1;
+    const a = S.sel.r + 1, b = S.sel.c + 1;
     const keys = [7, 8, 9, 4, 5, 6, 1, 2, 3].map(n => `<button class="key" data-act="key" data-v="${n}">${n}</button>`).join('');
     return `${turnBadge}
-      ${defend ? '<p class="hint" style="font-size:clamp(12px,2.2vh,18px)">🤖 ここをねらってる！<br>九九にこたえると、こうげきがとどくよ！</p>' : ''}
+      ${defend ? (S.retry
+        ? '<p class="hint" style="font-size:clamp(12px,2.2vh,18px);color:var(--pink)">😢 ちがうよ！<br>もういちど やってみよう</p>'
+        : '<p class="hint" style="font-size:clamp(12px,2.2vh,18px)">🤖 ここをねらってる！<br>九九にこたえよう！</p>') : ''}
       <div class="yomi">${yomi(a, b).q}</div>
       <div class="eq">${a} × ${b} = <span class="ans">${S.input || '?'}</span></div>
       <div class="keys">${keys}
@@ -624,18 +630,15 @@ function panelHTML() {
         <button class="key" data-act="key" data-v="0">0</button>
         <button class="key fire" data-act="fire" ${S.input === '' ? 'disabled' : ''}>${defend ? 'こたえる！' : 'こうげき！'}</button>
       </div>
-      <div class="mini">${defend ? 'まちがえると、こうげきは しっぱいになるよ' : 'ちがうマスにしたいときは、もういちどタップ'}</div>`;
+      <div class="mini">${defend ? 'せいかいするまで、なんどでもやりなおせるよ' : 'ちがうマスにしたいときは、もういちどタップ'}</div>`;
   }
 
   /* result */
   const res = S.result, cpu = isCpu(p);
-  const a = res.c + 1, b = res.r + 1;
+  const a = res.r + 1, b = res.c + 1;
   let big = '', cls = '', text = '';
   if (cpu) {
-    if (res.type === 'failed') {
-      big = '💨 しっぱい！'; cls = 'miss';
-      text = `${a}×${b}＝<b>${res.correct}</b> だよ。（あなたの答え ${res.given}）<br>答えがちがうので、<br>コンピュータのこうげきは しっぱい！`;
-    } else if (res.type === 'hit') {
+    if (res.type === 'hit') {
       big = res.sunk ? '💥 撃沈された…' : '💥 やられた！'; cls = 'hit';
       text = `${a}×${b}＝${res.correct}　せいかい！<br>` + (res.sunk ? `こうげきがとどいて、<br><b>${res.size}マスの潜水艦</b>がしずんだ…` : 'こうげきがとどいて、<br>潜水艦にあたっちゃった…');
     } else {
@@ -781,6 +784,7 @@ const canType = () => !S.modal && S.phase === 'battle' && (S.sub === 'aim' || S.
 function pressKey(v) {
   if (!canType()) return;
   if (S.input === '' && v === '0') return;
+  S.retry = false;
   if (S.input.length < 2) S.input += v;
   SFX.tap();
   render();
@@ -825,37 +829,42 @@ function resolveAttack(p, r, c, given) {
 
 function fire() {
   if (!canType() || S.input === '') return;
-  if (S.sub === 'defend') resolveDefense(S.sel.r, S.sel.c, Number(S.input));
-  else resolveAttack(S.turn, S.sel.r, S.sel.c, Number(S.input));
+  const {r, c} = S.sel, given = Number(S.input);
+  if (S.sub === 'defend') {
+    if (given !== (r + 1) * (c + 1)) {          // まちがえたら、同じ問題をもういちど
+      S.stats[0].wrong++;
+      S.retry = true; S.input = '';
+      SFX.wrong();
+      render();
+      return;
+    }
+    resolveDefense(r, c);
+  } else {
+    resolveAttack(S.turn, r, c, given);
+  }
   S.sub = 'result';
   render();
 }
 
 /* コンピュータのこうげき：コンピュータがえらんだマスの九九に、人がこたえる
-   正解 → こうげきがとどく（あたれば爆発）／ まちがい → こうげきは しっぱい */
-function resolveDefense(r, c, given) {
+   せいかいするまで、なんどでもやりなおせる。せいかいしたら、こうげきがとどく */
+function resolveDefense(r, c) {
   const correct = (r + 1) * (c + 1);
-  const st = S.stats[1], me = S.stats[0];
+  const st = S.stats[1];
   st.attacks++;
-  S.fx = '';
-  if (given !== correct) {
-    me.wrong++;
-    S.result = {type: 'failed', r, c, correct, given};
-    SFX.wrong();
-    return;
-  }
+  S.fx = ''; S.retry = false;
   SFX.correct();
   const ship = S.boards[0].find(s => s.cells.some(([a, b]) => a === r && b === c));
   if (!ship) {
     S.shots[1][r][c] = 'miss'; st.miss++;
-    S.result = {type: 'miss', r, c, correct, given};
+    S.result = {type: 'miss', r, c, correct};
     setTimeout(SFX.miss, 280);
   } else {
     S.shots[1][r][c] = 'hit'; st.hit++;
     ship.hits++;
     const sunk = ship.hits === ship.size;
     if (sunk) st.sunk++;
-    S.result = {type: 'hit', r, c, correct, given, sunk, size: ship.size};
+    S.result = {type: 'hit', r, c, correct, sunk, size: ship.size};
     S.fx = 'flash hit';
     setTimeout(sunk ? SFX.sunk : SFX.hit, 280);
     if (st.sunk === SHIPS.length) S.winner = 1;
@@ -899,7 +908,7 @@ function cpuTurn() {
 function cpuFire() {
   if (S.phase !== 'battle' || S.sub !== 'cpu' || S.turn !== 1) return;
   const [r, c] = cpuPick();
-  S.sel = {r, c}; S.input = '';
+  S.sel = {r, c}; S.input = ''; S.retry = false;
   S.sub = 'defend';
   SFX.tap();
   render();
