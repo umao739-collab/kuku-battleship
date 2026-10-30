@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>九九バトルシップゲーム</title>
+<title>九九せんすいかんバトル</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -120,7 +120,7 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
 .rules{margin:0; padding-left:1.3em; display:grid; gap:clamp(3px,.9vh,10px); font-size:clamp(13px,2.35vh,20px); font-weight:700; line-height:1.45}
 .rules b{color:var(--hot-d)}
 
-/* ---------- 交代画面 ---------- */
+/* ---------- こうたいがめん ---------- */
 .cover{flex:1; min-height:0; display:grid; place-items:center; padding:12px}
 .cover .box{
   background:#fff; border-radius:30px; border:5px solid #fff; text-align:center; max-width:640px; width:100%;
@@ -131,7 +131,7 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
 .cover h2{margin:.15em 0; font-size:clamp(22px,4.8vh,42px); font-weight:900; color:var(--hot-d)}
 .cover p{margin:.3em 0 1em; color:var(--soft); font-size:clamp(14px,2.6vh,22px); line-height:1.65; font-weight:800}
 
-/* ---------- 盤面 ---------- */
+/* ---------- ボード ---------- */
 .slot{flex:1; min-height:0; container-type:size; display:grid; place-items:start center}
 .board{
   width:min(100cqw,100cqh); height:min(100cqw,100cqh);
@@ -153,6 +153,10 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
   border:.35cqw solid rgba(255,255,255,.9);
   box-shadow:inset 0 -.6cqw 0 rgba(0,90,160,.18);
 }
+.sil{pointer-events:none; z-index:1; display:grid; place-items:center; min-width:0; min-height:0; padding:.3cqw; filter:drop-shadow(0 .4cqw .3cqw rgba(0,30,70,.35))}
+.sil svg{width:100%; height:100%; display:block}
+.sil.down{opacity:.55}
+.cell.hit{z-index:2}
 .cell.click{cursor:pointer}
 .cell.click:hover{filter:brightness(1.1)}
 .cell.click:active{transform:scale(.9)}
@@ -178,7 +182,7 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
 @keyframes ripple{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.7);opacity:.6}}
 @keyframes pulse{to{transform:scale(1.08)}}
 
-/* ---------- 海のカード ---------- */
+/* ---------- うみのカード ---------- */
 .seacard{display:flex; flex-direction:column; gap:clamp(4px,.9vh,10px)}
 .chead{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap}
 .cname{font-weight:900; font-size:clamp(14px,2.7vh,23px); display:flex; align-items:center; gap:.4em}
@@ -200,7 +204,7 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
   to{box-shadow:0 7px 0 rgba(6,78,138,.28), 0 0 0 6px rgba(255,200,61,.7), 0 0 28px 8px rgba(255,200,61,.65)}
 }
 
-/* ---------- 配置画面 ---------- */
+/* ---------- はいちがめん ---------- */
 .placegrid{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(270px,32vw,380px); grid-template-rows:minmax(0,1fr); gap:clamp(8px,1.6vw,20px)}
 .side{display:flex; flex-direction:column; justify-content:space-between; gap:clamp(4px,1vh,10px)}
 .side h2{margin:0; font-size:clamp(15px,3vh,26px); font-weight:900; color:var(--hot-d)}
@@ -214,7 +218,7 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
 .sp.now{background:#fff0b8; color:#7a4300; box-shadow:0 0 0 2px var(--sun)}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
 
-/* ---------- 対戦画面 ---------- */
+/* ---------- たいせんがめん ---------- */
 .battle{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(240px,25vw,330px) minmax(0,1fr); grid-template-rows:minmax(0,1fr); gap:clamp(8px,1.5vw,20px)}
 .panel{display:flex; flex-direction:column; justify-content:center; gap:clamp(4px,1vh,12px); overflow:hidden}
 .turn{
@@ -274,15 +278,15 @@ input{font:inherit; user-select:text; -webkit-user-select:text}
   text-shadow:0 4px 0 var(--hot-d), 0 8px 0 rgba(0,40,90,.35), 0 0 22px rgba(255,255,255,.5); animation:pop .6s cubic-bezier(.2,1.6,.4,1);
 }
 .endbtns{grid-column:1/-1; display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
-table.stat{width:100%; border-collapse:collapse; font-weight:800; font-size:clamp(12px,2.2vh,18px)}
+table.stat{width:100%; border-collapse:collapse; font-weight:800; font-size:clamp(11px,2vh,17px)}
 table.stat th,table.stat td{padding:.35em .2em; text-align:center; border-bottom:2px dashed #cfe6f7}
-table.stat th:first-child,table.stat td:first-child{text-align:left; color:var(--soft)}
+table.stat th:first-child,table.stat td:first-child{text-align:left; white-space:nowrap; color:var(--soft)}
 .statcard h2{margin:0 0 .3em; font-size:clamp(15px,2.8vh,24px); font-weight:900; color:var(--blue-d)}
 .confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:7}
 .confetti i{position:absolute; top:-24px; width:10px; height:16px; border-radius:2px; animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(112vh) rotate(760deg)}}
 
-/* ---------- 縦向き ---------- */
+/* ---------- たてむき ---------- */
 @media (orientation:portrait){
   .tcols{grid-template-columns:1fr; grid-template-rows:auto auto}
   .titlegrid{overflow:hidden}
@@ -302,9 +306,9 @@ table.stat th:first-child,table.stat td:first-child{text-align:left; color:var(-
 <script>
 'use strict';
 /* =========================================================
-   九九バトルシップゲーム
-   ・ふたりで（同じタブレットで交代／配置のときだけ相手に見せない）
-   ・ひとりで（コンピュータと対戦）
+   九九せんすいかんバトル
+   ・ふたりで（おなじタブレットでこうたい／はいちのときだけあいてに見せない）
+   ・ひとりで（コンピュータとたいせん）
    ========================================================= */
 const N = 9;
 const SHIPS = [2, 3, 3, 4, 5];
@@ -321,7 +325,7 @@ const S = {
   sound: true,
   names: ['', ''],
   boards: [null, null],  // [{id,size,cells,hits}]
-  shots: [null, null],   // shots[p] = pが相手の海に撃った結果
+  shots: [null, null],   // shots[p] = pがあいての うみに撃った結果
   stats: null,
   turn: 0,
   sub: 'start',        // battle中: start / aim / cpu / result
@@ -333,9 +337,9 @@ const S = {
   place: null,
   fx: '',
   timer: null,
-  again: false,   // あたったので、もう一回こうげき中
+  again: false,   // あたったので、もういっかいこうげき中
   modal: null,
-  retry: false    // コンピュータの問題をまちがえた（やり直し中）
+  retry: false    // コンピュータの問題をまちがえた（やりなおし中）
 };
 
 const $app = document.getElementById('app');
@@ -359,7 +363,7 @@ const KUKU = {
   8: ['はちいちが|はち','はちに|じゅうろく','はちさん|にじゅうし','はちし|さんじゅうに','はちご|しじゅう','はちろく|しじゅうはち','はちしち|ごじゅうろく','はっぱ|ろくじゅうし','はっく|しちじゅうに'],
   9: ['くいちが|く','くに|じゅうはち','くさん|にじゅうしち','くし|さんじゅうろく','くご|しじゅうご','くろく|ごじゅうし','くしち|ろくじゅうさん','くは|しちじゅうに','くく|はちじゅういち']
 };
-/* a＝かけられる数（だん）、b＝かける数 → {q: 式の読み, ans: 答えの読み} */
+/* a＝かけられる かず（だん）、b＝かける かず → {q: 式の読み, ans: こたえの読み} */
 function yomi(a, b) {
   const [q, ans] = KUKU[a][b - 1].split('|');
   return {q, ans};
@@ -415,7 +419,7 @@ const SFX = {
   lose()    { [392, 330, 262].forEach((f, i) => tone(f, .3, 'triangle', .1, i * .2)); }
 };
 
-/* ---------- 配置ロジック ---------- */
+/* ---------- はいちロジック ---------- */
 function canPlace(placed, r, c, size, orient) {
   const cells = [];
   for (let i = 0; i < size; i++) {
@@ -442,14 +446,31 @@ function randomPlace() {
   }
 }
 
-/* ---------- 盤面の描画 ---------- */
+/* ---------- 潜水艦のシルエット ---------- */
+function silSVG(size, vertical) {
+  const W = 100 * size, sx = Math.max(W * .34, 70);
+  const body = `<rect x="8" y="42" width="${W - 22}" height="38" rx="19"/>
+    <path d="M${sx} 44 L${sx + 6} 26 Q${sx + 8} 22 ${sx + 14} 22 L${sx + 34} 22 Q${sx + 40} 22 ${sx + 42} 28 L${sx + 48} 44 Z"/>
+    <rect x="${sx + 24}" y="8" width="6" height="17" rx="3"/><rect x="${sx + 24}" y="8" width="16" height="6" rx="3"/>
+    <rect x="${W - 22}" y="36" width="14" height="8" rx="3"/><rect x="${W - 22}" y="78" width="14" height="8" rx="3" transform="translate(0,-8)"/>
+    <rect x="${W - 16}" y="52" width="10" height="18" rx="4"/>`;
+  let ports = '';
+  const n = Math.max(1, size - 1);
+  for (let i = 0; i < n; i++) ports += `<circle cx="${(W - 22) * (i + 1) / (n + 1) + 8}" cy="62" r="7" fill="#9be7ff"/>`;
+  const g = `<g fill="#12325e" stroke="#fff" stroke-width="7" stroke-linejoin="round" paint-order="stroke">${body}</g><g fill="#12325e">${body}</g>${ports}`;
+  return vertical
+    ? `<svg viewBox="0 0 100 ${W}" preserveAspectRatio="xMidYMid meet"><g transform="translate(100,0) rotate(90)">${g}</g></svg>`
+    : `<svg viewBox="0 0 ${W} 100" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+}
+
+/* ---------- ボードの描画 ---------- */
 function boardHTML(o) {
   const map = Array.from({length: N}, () => Array(N).fill(null));
   (o.ships || []).forEach(s => s.cells.forEach(([r, c]) => { map[r][c] = s; }));
-  let h = '<div class="board"><div style="grid-column:1;grid-row:1"></div><div class="cap-top">かける数</div><div class="cap-left">かけられる数</div><div class="corner">九九<br>表</div>';
-  for (let c = 0; c < N; c++) h += `<div class="hd">${c + 1}</div>`;
+  let h = '<div class="board"><div style="grid-column:1;grid-row:1"></div><div class="cap-top">かける かず</div><div class="cap-left">かけられる かず</div><div class="corner" style="grid-row:2;grid-column:2">九九<br>ひょう</div>';
+  for (let c = 0; c < N; c++) h += `<div class="hd" style="grid-row:2;grid-column:${c + 3}">${c + 1}</div>`;
   for (let r = 0; r < N; r++) {
-    h += `<div class="hd">${r + 1}</div>`;
+    h += `<div class="hd" style="grid-row:${r + 3};grid-column:2">${r + 1}</div>`;
     for (let c = 0; c < N; c++) {
       const s = map[r][c];
       const shot = o.shots ? o.shots[r][c] : null;
@@ -468,9 +489,14 @@ function boardHTML(o) {
       }
       const canClick = o.click && !shot;
       if (canClick) cls += ' click';
-      h += `<div class="${cls}"${canClick ? ` data-act="cell" data-r="${r}" data-c="${c}"` : ''}>${txt}</div>`;
+      h += `<div class="${cls}"${canClick ? ` data-act="cell" data-r="${r}" data-c="${c}"` : ''} style="grid-row:${r + 3};grid-column:${c + 3}">${txt}</div>`;
     }
   }
+  if (o.showShips) (o.ships || []).forEach(sh => {
+    const rs = sh.cells.map(x => x[0]), cs = sh.cells.map(x => x[1]);
+    const r0 = Math.min(...rs), c0 = Math.min(...cs), vert = Math.max(...rs) > r0;
+    h += `<div class="sil${sh.hits === sh.size ? ' down' : ''}" style="grid-row:${r0 + 3}/span ${vert ? sh.size : 1};grid-column:${c0 + 3}/span ${vert ? 1 : sh.size}">${silSVG(sh.size, vert)}</div>`;
+  });
   return h + '</div>';
 }
 
@@ -491,7 +517,7 @@ function coverHTML(emoji, title, text, label, act) {
   </div></div>`;
 }
 
-/* ---------- 各画面 ---------- */
+/* ---------- 各がめん ---------- */
 function viewTitle() {
   const two = S.mode === '2p';
   const names = two
@@ -502,31 +528,31 @@ function viewTitle() {
     : `<div class="names">
          <label>あなたのなまえ<input id="n0" maxlength="8" placeholder="プレイヤー1" value="${esc(S.names[0])}"></label>
        </div>
-       <h2>コンピュータの強さ</h2>
+       <h2>コンピュータのつよさ</h2>
        <div class="seg3">${LEVELS.map((L, i) =>
          `<button class="btn ${S.level === i ? '' : 'white'}" data-act="level" data-v="${i}">${L.emoji} ${L.name}</button>`).join('')}</div>`;
   const rules = two
-    ? `<li>はじめに、ひとりずつ<b>相手に見えないように</b>潜水艦をかくす。</li>
-       <li>そのあとは、<b>同じ画面をふたりで見ながら</b>こうたいで対戦！</li>
-       <li>相手の海のマスをタップして、<b>そのマスの九九の答え</b>を入れよう。</li>
-       <li>正解ならこうげき成功！ <b>あたったら、もう一回</b>こうげきできるよ。まちがえたら番がうつるよ。</li>
-       <li>先に相手の潜水艦<b>5隻</b>をぜんぶ沈めたら勝ち！</li>`
-    : `<li>まず、自分の潜水艦をかくそう。</li>
-       <li><b>自分の番</b>：相手の海のマスをタップして、そのマスの九九の答えを入れてこうげき！ <b>あたったら、もう一回</b>！</li>
-       <li><b>コンピュータの番</b>：コンピュータがえらんだマスの九九にこたえよう。まちがえても<b>やり直せる</b>よ。せいかいすると、こうげきがとどくよ。</li>
-       <li>先に相手の潜水艦<b>5隻</b>をぜんぶ沈めたら勝ち！</li>`;
+    ? `<li>はじめに、ひとりずつ<b>あいてに見えないように</b>せんすいかんをかくす。</li>
+       <li>そのあとは、<b>おなじ がめんをふたりで見ながら</b>こうたいでたいせん！</li>
+       <li>あいての うみのマスをタップして、<b>そのマスの九九の こたえ</b>を入れよう。</li>
+       <li>せいかいならこうげきせいこう！ <b>あたったら、もういっかい</b>こうげきできるよ。まちがえたらばんがうつるよ。</li>
+       <li>先にあいてのせんすいかん<b>5つ</b>をぜんぶしずめたらかち！</li>`
+    : `<li>まず、じぶんのせんすいかんをかくそう。</li>
+       <li><b>じぶんのばん</b>：あいての うみのマスをタップして、そのマスの九九の こたえを入れてこうげき！ <b>あたったら、もういっかい</b>！</li>
+       <li><b>コンピュータのばん</b>：コンピュータがえらんだマスの九九にこたえよう。まちがえても<b>やりなおせる</b>よ。せいかいすると、こうげきがとどくよ。</li>
+       <li>先にあいてのせんすいかん<b>5つ</b>をぜんぶしずめたらかち！</li>`;
   return `<div class="fab">${soundBtn()}</div><main class="main"><div class="titlegrid">
     <div class="hero">
       <div class="logo">🚢💥🌊</div>
-      <h1>九九バトルシップゲーム</h1>
-      <p class="lead">九九をこたえて、かくれた潜水艦をうちしずめろ！</p>
+      <h1>九九せんすいかんバトル</h1>
+      <p class="lead">九九をこたえて、かくれたせんすいかんをうちしずめろ！</p>
     </div>
     <div class="tcols">
       <div class="card tcard">
         <h2>あそびかた</h2>
         <div class="seg2">
-          <button class="btn ${S.mode === '1p' ? '' : 'white'}" data-act="mode" data-v="1p">🤖 ひとりで<small>コンピュータと対戦</small></button>
-          <button class="btn ${S.mode === '2p' ? '' : 'white'}" data-act="mode" data-v="2p">👫 ふたりで<small>同じタブレットで対戦</small></button>
+          <button class="btn ${S.mode === '1p' ? '' : 'white'}" data-act="mode" data-v="1p">🤖 ひとりで<small>コンピュータとたいせん</small></button>
+          <button class="btn ${S.mode === '2p' ? '' : 'white'}" data-act="mode" data-v="2p">👫 ふたりで<small>おなじタブレットでたいせん</small></button>
         </div>
         ${names}
         <div style="text-align:center"><button class="btn hot xl" data-act="start">バトルスタート！</button></div>
@@ -542,11 +568,11 @@ function viewTitle() {
 function viewPlaceCover() {
   const p = S.placeP;
   if (p === 0) {
-    return coverHTML('🤫', `${who(0)}から、潜水艦をかくすよ`,
-      `${who(1)}は、画面を見ないでね！`, `${who(0)}、じゅんびOK！`, 'ready-place');
+    return coverHTML('🤫', `${who(0)}から、せんすいかんをかくすよ`,
+      `${who(1)}は、がめんを見ないでね！`, `${who(0)}、じゅんびOK！`, 'ready-place');
   }
-  return coverHTML('🔄', `${who(1)}の番だよ`,
-    `${who(0)}の配置はおわったよ。<br>タブレットを${who(1)}にわたしてね。<br>${who(0)}は画面を見ないでね！`,
+  return coverHTML('🔄', `${who(1)}のばんだよ`,
+    `${who(0)}のはいちはおわったよ。<br>タブレットを${who(1)}にわたしてね。<br>${who(0)}はがめんを見ないでね！`,
     `${who(1)}、じゅんびOK！`, 'ready-place');
 }
 
@@ -556,28 +582,28 @@ function viewPlace() {
   const done = idx === SHIPS.length;
   const list = SHIPS.map((sz, i) =>
     `<span class="sp ${i < idx ? 'ok' : (i === idx ? 'now' : '')}">${i < idx ? '✅' : (i === idx ? '👉' : '○')} ${sz}マス</span>`).join('');
-  const title = S.mode === '2p' ? `⚓ ${who(p)}、潜水艦をかくそう` : '⚓ 潜水艦を配置しよう';
+  const title = S.mode === '2p' ? `⚓ ${who(p)}の じゅんび` : '⚓ せんすいかんを ならべよう';
   return topBar(title, '', '<button class="btn white sm" data-act="quit">はじめにもどる</button>') + `
     <main class="main"><div class="placegrid">
       <section class="card seacard">
-        <div class="chead"><div class="cname"><span class="dot"></span>${S.mode === '2p' ? who(p) + 'の海' : '自分の海'}</div></div>
+        <div class="chead"><div class="cname"><span class="dot"></span>${S.mode === '2p' ? who(p) + 'の うみ' : 'じぶんの うみ'}</div></div>
         <div class="slot">${boardHTML({ships: P.placed, showShips: true, click: !done})}</div>
       </section>
       <section class="card side">
         ${S.mode === '2p' ? `<div class="warn">👀 ${who(1 - p)}は見ないでね！</div>` : ''}
-        <h2>${done ? 'ぜんぶ置けたよ！' : `${SHIPS[idx]}マス潜水艦を置こう`}</h2>
+        <h2>${done ? 'ぜんぶおけたよ！' : `${SHIPS[idx]}マスせんすいかんをおこう`}</h2>
         <div class="seg">
-          <button class="btn sm ${P.orient === 'h' ? '' : 'white'}" data-act="orient" data-v="h">↔ 横向き</button>
-          <button class="btn sm ${P.orient === 'v' ? '' : 'white'}" data-act="orient" data-v="v">↕ 縦向き</button>
+          <button class="btn sm ${P.orient === 'h' ? '' : 'white'}" data-act="orient" data-v="h">↔ よこむき</button>
+          <button class="btn sm ${P.orient === 'v' ? '' : 'white'}" data-act="orient" data-v="v">↕ たてむき</button>
         </div>
-        <p class="soft">${done ? '「これでOK！」をおしてね。' : '盤面の「はじまりのマス」をタップ！（右か下にのびるよ）'}</p>
+        <p class="soft">${done ? '「これでOK！」をおしてね。' : '「はじまりの マス」を タップ！（右か 下に のびるよ）'}</p>
         <div class="msg">${esc(P.msg)}</div>
         <div class="splist">${list}</div>
         <div class="grid2">
           <button class="btn white sm" data-act="undo" ${idx === 0 ? 'disabled' : ''}>↩ ひとつもどす</button>
-          <button class="btn white sm" data-act="reset-place">🔄 最初から</button>
+          <button class="btn white sm" data-act="reset-place">🔄 はじめから</button>
         </div>
-        <button class="btn blue sm" data-act="random">🎲 おまかせで置く</button>
+        <button class="btn blue sm" data-act="random">🎲 おまかせでおく</button>
         <button class="btn hot" data-act="done-place" ${done ? '' : 'disabled'}>✅ これでOK！</button>
       </section>
     </div></main>`;
@@ -591,7 +617,7 @@ function seaCard(q) {
   const fresh = showRes && res.type !== 'wrong' ? {r: res.r, c: res.c} : null;
   const selClass = showRes ? (res.type === 'wrong' ? 'wrong' : (res.type === 'failed' ? 'failed' : '')) : '';
   const sel = target && (aim || S.sub === 'defend' || S.sub === 'result') ? S.sel : null;
-  const label = isCpu(q) ? 'コンピュータの海' : (S.mode === '1p' ? '自分の海' : `${who(q)}の海`);
+  const label = isCpu(q) ? 'コンピュータの うみ' : (S.mode === '1p' ? 'じぶんの うみ' : `${who(q)}の うみ`);
   return `<section class="card seacard q${q} ${target ? 'target' : ''}">
     ${target ? `<div class="tag">${isCpu(S.turn) ? '⚠ ねらわれてる！' : '▶ ここをこうげき！'}</div>` : ''}
     <div class="chead"><div class="cname"><span class="dot"></span>${label}</div>${pipsHTML(S.boards[q])}</div>
@@ -605,8 +631,8 @@ function seaCard(q) {
 
 function panelHTML() {
   const p = S.turn;
-  const turnBadge = `<div class="turn ${p === 1 ? 't1' : ''}">${isCpu(p) ? '🤖' : '🎯'} ${who(p)}の番</div>` + (S.again && S.sub !== 'result' ? '<div class="again">🔥 あたったから もう一回！</div>' : '');
-  const axis = '<div class="mini">左の数＝かけられる数　上の数＝かける数</div>';
+  const turnBadge = `<div class="turn ${p === 1 ? 't1' : ''}">${isCpu(p) ? '🤖' : '🎯'} ${who(p)}<span style="white-space:nowrap">の ばん</span></div>` + (S.again && S.sub !== 'result' ? '<div class="again">🔥 あたったから もういっかい！</div>' : '');
+  const axis = '<div class="mini">左の かず＝かけられる かず<br>上の かず＝かける かず</div>';
 
   if (S.sub === 'cpu') {
     return `${turnBadge}<div class="think">🤖 どこをねらおうかな<span>.</span><span>.</span><span>.</span></div>${axis}`;
@@ -615,7 +641,7 @@ function panelHTML() {
   if (S.sub === 'aim' || S.sub === 'defend') {
     const defend = S.sub === 'defend';
     if (!S.sel) {
-      return `${turnBadge}<p class="hint">光っている<br>「${who(1 - p)}の海」の<br>マスをタップして、<br>そのマスの九九の答えを<br>こたえよう！</p>${axis}`;
+      return `${turnBadge}<p class="hint">ひかっている<br>「${who(1 - p)}の うみ」の<br>マスをタップして、<br>そのマスの九九の こたえを<br>こたえよう！</p>${axis}`;
     }
     const a = S.sel.r + 1, b = S.sel.c + 1;
     const keys = [7, 8, 9, 4, 5, 6, 1, 2, 3].map(n => `<button class="key" data-act="key" data-v="${n}">${n}</button>`).join('');
@@ -639,30 +665,30 @@ function panelHTML() {
   let big = '', cls = '', text = '';
   if (cpu) {
     if (res.type === 'hit') {
-      big = res.sunk ? '💥 撃沈された…' : '💥 やられた！'; cls = 'hit';
-      text = `${a}×${b}＝${res.correct}　せいかい！<br>` + (res.sunk ? `こうげきがとどいて、<br><b>${res.size}マスの潜水艦</b>がしずんだ…` : 'こうげきがとどいて、<br>潜水艦にあたっちゃった…');
+      big = res.sunk ? '💥 しずめられた…' : '💥 やられた！'; cls = 'hit';
+      text = `${a}×${b}＝${res.correct}　せいかい！<br>` + (res.sunk ? `こうげきがとどいて、<br><b>${res.size}マスのせんすいかん</b>がしずんだ…` : 'こうげきがとどいて、<br>せんすいかんにあたっちゃった…');
     } else {
       big = '🌊 はずれ！'; cls = 'miss';
       text = `${a}×${b}＝${res.correct}　せいかい！<br>コンピュータのこうげきは、<br>はずれたよ。`;
     }
   } else if (res.type === 'hit') {
-    big = res.sunk ? '💥 撃沈！' : '💥 命中！'; cls = 'hit';
-    text = `${a}×${b}＝${res.correct}　せいかい！<br>` + (res.sunk ? `<b>${res.size}マスの潜水艦</b>をしずめた！` : '潜水艦にあたった！');
+    big = res.sunk ? '💥 しずめた！' : '💥 あたり！'; cls = 'hit';
+    text = `${a}×${b}＝${res.correct}　せいかい！<br>` + (res.sunk ? `<b>${res.size}マスのせんすいかん</b>をしずめた！` : 'せんすいかんにあたった！');
   } else if (res.type === 'miss') {
     big = '🌊 はずれ…'; cls = 'miss';
-    text = `${a}×${b}＝${res.correct}　せいかい！<br>でも、ここに潜水艦はいなかったよ。`;
+    text = `${a}×${b}＝${res.correct}　せいかい！<br>でも、ここにせんすいかんはいなかったよ。`;
   } else {
     big = '😢 おしい！'; cls = 'wrong';
-    text = `${a}×${b}＝<b>${res.correct}</b> だよ。<br>こうげきできずに、番がうつるよ。`;
+    text = `${a}×${b}＝<b>${res.correct}</b> だよ。<br>こうげきできずに、ばんがうつるよ。`;
   }
   let label;
   const again = res.type === 'hit' && S.winner === null;
-  if (S.winner !== null) { text += S.winner === 1 && cpu ? '<br>ぜんぶ沈められちゃった…' : '<br>🎉 ぜんぶ沈めた！'; label = 'けっかを見る'; }
+  if (S.winner !== null) { text += S.winner === 1 && cpu ? '<br>ぜんぶしずめられちゃった…' : '<br>🎉 ぜんぶしずめた！'; label = 'けっかを見る'; }
   else if (again) {
-    text += cpu ? '<br>🔥 コンピュータが もう一回！' : '<br>🔥 あたったから、もう一回こうげき！';
+    text += cpu ? '<br>🔥 コンピュータが もういっかい！' : '<br>🔥 あたったから、もういっかいこうげき！';
     label = cpu ? 'つぎへ' : 'もういちど こうげき！';
   }
-  else label = isCpu(1 - p) ? 'コンピュータの番へ' : (cpu ? 'つぎは あなたの番' : `つぎは${who(1 - p)}の番`);
+  else label = isCpu(1 - p) ? 'コンピュータのばんへ' : (cpu ? 'つぎは あなたのばん' : `つぎは${who(1 - p)}のばん`);
   const y = yomi(a, b);
   return `${turnBadge}<div class="rbig ${cls}">${big}</div><div class="yomi">${y.q}<span class="a">${y.ans}</span></div><p class="rtext">${text}</p>
     <div style="text-align:center"><button class="btn hot" data-act="next">${label}</button></div>`;
@@ -672,11 +698,11 @@ function viewBattle() {
   if (S.sub === 'start') {
     const first = S.turn;
     const text = S.mode === '2p'
-      ? `ここからは、ふたりで<b>同じ画面</b>を見ながらたたかうよ。<br>先こうは <b>${who(first)}</b>！`
-      : `先こうは <b>${who(first)}</b>！<br>九九をこたえて、コンピュータの潜水艦をしずめよう！`;
+      ? `ここからは、ふたりで <b>おなじ がめん</b>を 見ながら たたかうよ。<br>先こうは <b>${who(first)}</b>！`
+      : `先こうは <b>${who(first)}</b>！<br>九九をこたえて、コンピュータのせんすいかんをしずめよう！`;
     return coverHTML('⚔️', 'バトルスタート！', text, 'スタート！', 'ready-battle');
   }
-  return topBar('🌊 九九バトルシップゲーム', '', '<button class="btn white sm" data-act="quit">やり直す</button>') + `
+  return topBar('🌊 九九せんすいかんバトル', '', '<button class="btn white sm" data-act="quit">やりなおす</button>') + `
     <main class="main"><div class="battle ${S.fx === 'flash hit' ? 'shake' : ''}">
       ${seaCard(0)}
       <section class="card panel">${panelHTML()}</section>
@@ -697,20 +723,20 @@ function viewEnd() {
   const w = S.winner;
   const humanWon = !isCpu(w);
   const row = (label, f) => `<tr><td>${label}</td><td>${f(S.stats[0], 0)}</td><td>${f(S.stats[1], 1)}</td></tr>`;
-  const head = humanWon ? `🎉 ${who(w)}の勝ち！ 🎉` : '🤖 コンピュータの勝ち！ もういちどちょうせん！';
-  const seaName = q => isCpu(q) ? 'コンピュータの海' : `${who(q)}の海`;
-  return topBar('🌊 九九バトルシップゲーム', '', '') + (humanWon ? confettiHTML() : '') + `
+  const head = humanWon ? `🎉 ${who(w)}のかち！ 🎉` : '🤖 コンピュータのかち！ もういちどちょうせん！';
+  const seaName = q => isCpu(q) ? 'コンピュータの うみ' : `${who(q)}の うみ`;
+  return topBar('🌊 九九せんすいかんバトル', '', '') + (humanWon ? confettiHTML() : '') + `
     <main class="main"><div class="endgrid">
       <div class="winner">${head}</div>
       <section class="card statcard">
         <h2>きろく</h2>
         <table class="stat">
           <tr><th></th><th>${nm(0)}</th><th>${nm(1)}</th></tr>
-          ${row('こうげき', s => s.attacks + '回')}
-          ${row('命中', s => s.hit)}
+          ${row('こうげき', s => s.attacks + 'かい')}
+          ${row('あたり', s => s.hit)}
           ${row('はずれ', s => s.miss)}
-          ${row('答えまちがい', (s, i) => (S.mode === '1p' && i === 1) ? '－' : s.wrong)}
-          ${row('撃沈', s => s.sunk + '/' + SHIPS.length)}
+          ${row('まちがい', (s, i) => (S.mode === '1p' && i === 1) ? '－' : s.wrong)}
+          ${row('しずめた', s => s.sunk + '/' + SHIPS.length)}
         </table>
       </section>
       ${[0, 1].map(q => `<section class="card seacard q${q}">
@@ -734,9 +760,9 @@ function render() {
   else if (S.phase === 'end') h = viewEnd();
   if (S.modal === 'quit') {
     h += `<div class="modal"><div class="mbox">
-      <h2>やり直す？</h2>
-      <p>はじめの画面にもどるよ。<br>いまのゲームは消えるけど、いいかな？</p>
-      <div class="mbtns"><button class="btn white" data-act="modal-no">もどる</button><button class="btn hot" data-act="modal-yes">やり直す</button></div>
+      <h2>やりなおす？</h2>
+      <p>はじめのがめんにもどるよ。<br>いまのゲームはきえるけど、いいかな？</p>
+      <div class="mbtns"><button class="btn white" data-act="modal-no">もどる</button><button class="btn hot" data-act="modal-yes">やりなおす</button></div>
     </div></div>`;
   }
   $app.className = S.fx;
@@ -773,7 +799,7 @@ function placeShip(r, c) {
   if (P.placed.length >= SHIPS.length) return;
   const size = SHIPS[P.placed.length];
   const cells = canPlace(P.placed, r, c, size, P.orient);
-  if (!cells) { P.msg = 'そこには置けないよ（はみだすか、かさなるよ）'; SFX.wrong(); render(); return; }
+  if (!cells) { P.msg = 'そこにはおけないよ（はみだすか、かさなるよ）'; SFX.wrong(); render(); return; }
   P.placed.push({id: P.placed.length, size, cells, hits: 0});
   P.msg = '';
   SFX.place();
@@ -796,7 +822,7 @@ function delKey() {
   render();
 }
 
-/* 攻撃の判定（人もコンピュータも同じ） */
+/* 攻撃の判定（人もコンピュータもおなじ） */
 function resolveAttack(p, r, c, given) {
   const o = 1 - p;
   const correct = (r + 1) * (c + 1);
@@ -831,7 +857,7 @@ function fire() {
   if (!canType() || S.input === '') return;
   const {r, c} = S.sel, given = Number(S.input);
   if (S.sub === 'defend') {
-    if (given !== (r + 1) * (c + 1)) {          // まちがえたら、同じ問題をもういちど
+    if (given !== (r + 1) * (c + 1)) {          // まちがえたら、おなじ問題をもういちど
       S.stats[0].wrong++;
       S.retry = true; S.input = '';
       SFX.wrong();
@@ -963,7 +989,7 @@ function act(a, d) {
     case 'fire': fire(); break;
     case 'next': {
       clearTimer();
-      const keep = S.result && S.result.type === 'hit' && S.winner === null;   // あたったら、もう一回
+      const keep = S.result && S.result.type === 'hit' && S.winner === null;   // あたったら、もういっかい
       S.sel = null; S.input = ''; S.result = null; S.fx = '';
       if (S.winner !== null) {
         S.again = false;
