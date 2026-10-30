@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>九九バトルシップゲーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12325e; --soft:#4f6f98;
+  --sun:#ffc83d; --sun-d:#e29600;
+  --hot:#ff6a2b; --hot-d:#c9440c; --pink:#ff4f87;
+  --blue:#1a9be0; --blue-d:#0b5fa5;
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","BIZ UDPGothic","Meiryo",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0; height:100%; overflow:hidden}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 88% 6%, #fff6b0 0 4%, rgba(255,226,122,.55) 9%, rgba(255,226,122,0) 26%),
+    linear-gradient(180deg,#59d6ff 0%,#1f9fe3 48%,#0a62b0 100%);
+  -webkit-tap-highlight-color:transparent;
+  user-select:none; -webkit-user-select:none;
+  touch-action:manipulation;
+}
+input{font:inherit; user-select:text; -webkit-user-select:text}
+
+/* ---------- 背景（泡と波） ---------- */
+.bubbles{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
+.bubbles i{
+  position:absolute; bottom:-60px; border-radius:50%;
+  border:2px solid rgba(255,255,255,.65); background:rgba(255,255,255,.16);
+  animation:rise linear infinite;
+}
+@keyframes rise{to{transform:translateY(-115vh) translateX(24px)}}
+.waves{position:fixed; left:0; right:0; bottom:0; height:12vh; pointer-events:none; z-index:1; overflow:hidden}
+.waves i{
+  position:absolute; left:0; bottom:0; width:200%; height:100%;
+  background:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0 60 Q150 10 300 60 T600 60 T900 60 T1200 60 V120 H0Z' fill='%23ffffff' fill-opacity='.22'/%3E%3C/svg%3E") 0 0/50% 100% repeat-x;
+  animation:wave 9s linear infinite;
+}
+.waves i+i{opacity:.7; height:78%; animation-duration:14s; animation-direction:reverse}
+@keyframes wave{to{transform:translateX(-50%)}}
+
+/* ---------- 全体レイアウト（スクロールなし） ---------- */
+#app{
+  position:relative; z-index:2; display:flex; flex-direction:column;
+  height:100vh; height:100dvh; overflow:hidden;
+}
+.top{
+  flex:none; height:clamp(44px,8vh,62px); display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:0 clamp(10px,1.6vw,22px);
+  background:linear-gradient(90deg,#ff6a2b,#ffb12f);
+  border-bottom:4px solid #fff; box-shadow:0 6px 16px rgba(0,40,90,.3);
+}
+.top h1{
+  margin:0; font-size:clamp(16px,3.2vh,28px); font-weight:900; color:#fff; white-space:nowrap;
+  text-shadow:0 2px 0 rgba(160,60,0,.55);
+}
+.topc{flex:1; display:flex; justify-content:center; min-width:0}
+.topr{display:flex; gap:8px; align-items:center}
+.main{flex:1; min-height:0; padding:clamp(6px,1.4vh,16px) clamp(8px,1.6vw,22px); display:grid}
+.fab{position:fixed; top:10px; right:12px; z-index:5}
+
+.card{
+  position:relative; background:#fff; border-radius:22px; border:4px solid #fff;
+  box-shadow:0 7px 0 rgba(6,78,138,.28), 0 14px 28px rgba(0,40,90,.28);
+  padding:clamp(8px,1.5vh,16px) clamp(10px,1.4vw,18px);
+  min-height:0; min-width:0;
+}
+
+/* ---------- ボタン ---------- */
+.btn{
+  --sh:var(--sun-d);
+  font:inherit; font-weight:900; font-size:clamp(14px,2.6vh,22px);
+  border:0; border-radius:999px; padding:.6em 1.3em; letter-spacing:.02em;
+  background:linear-gradient(180deg,#ffe27a,#ffc83d); color:#5a3300;
+  box-shadow:0 5px 0 var(--sh), 0 8px 14px rgba(0,40,90,.25);
+  cursor:pointer; transition:transform .08s, box-shadow .08s;
+}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:translateY(4px); box-shadow:0 1px 0 var(--sh)}
+.btn.hot{--sh:var(--hot-d); background:linear-gradient(180deg,#ff9a4d,#ff6a2b); color:#fff; text-shadow:0 2px 0 rgba(150,50,0,.45)}
+.btn.blue{--sh:var(--blue-d); background:linear-gradient(180deg,#5cc9f5,#1a9be0); color:#fff; text-shadow:0 2px 0 rgba(0,60,120,.4)}
+.btn.white{--sh:#b9d3ea; background:#fff; color:var(--ink)}
+.btn.sm{font-size:clamp(12px,2.1vh,17px); padding:.45em 1em}
+.btn.xl{font-size:clamp(18px,3.8vh,32px); padding:.6em 1.7em; animation:bob 1.6s ease-in-out infinite}
+.btn:disabled{opacity:.4; cursor:not-allowed; animation:none}
+.btn:disabled:active{transform:none; box-shadow:0 5px 0 var(--sh), 0 8px 14px rgba(0,40,90,.25)}
+.btn.icon{padding:.35em .7em; font-size:clamp(14px,2.6vh,22px)}
+@keyframes bob{50%{transform:translateY(-4px)}}
+
+/* ---------- タイトル ---------- */
+.titlegrid{height:100%; display:grid; grid-template-rows:auto minmax(0,1fr); gap:clamp(6px,1.6vh,16px)}
+.hero{text-align:center; color:#fff; padding-top:clamp(4px,1.2vh,14px)}
+.hero .logo{font-size:clamp(28px,6.4vh,58px); line-height:1.15; animation:bob 2.2s ease-in-out infinite}
+.hero h1{
+  margin:.05em 0 0; font-weight:900; font-size:clamp(26px,min(6vw,8.6vh),66px); letter-spacing:.03em;
+  text-shadow:0 4px 0 var(--hot-d), 0 8px 0 rgba(0,40,90,.35), 0 0 22px rgba(255,255,255,.5);
+}
+.hero .lead{margin:.2em 0 0; font-weight:800; font-size:clamp(13px,2.5vh,22px); text-shadow:0 2px 0 rgba(0,60,120,.5)}
+.tcols{display:grid; grid-template-columns:1.1fr .9fr; gap:clamp(8px,1.6vw,20px); min-height:0}
+.tcard{display:flex; flex-direction:column; justify-content:center; gap:clamp(6px,1.6vh,16px)}
+.tcard h2{margin:0; font-size:clamp(14px,2.6vh,22px); font-weight:900; color:var(--blue-d)}
+.seg2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.seg2 .btn{line-height:1.25}
+.seg2 small{display:block; font-size:.62em; font-weight:700; opacity:.85}
+.seg3{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.names{display:grid; gap:10px}
+.names.two{grid-template-columns:1fr 1fr}
+.names label{display:block; font-weight:800; font-size:clamp(12px,2.1vh,17px); color:var(--soft)}
+.names input{
+  width:100%; margin-top:4px; padding:.5em .9em; border-radius:14px; border:3px solid #cfe6f7; background:#f4faff;
+  font-size:clamp(15px,2.8vh,24px); font-weight:800; color:var(--ink);
+}
+.names input:focus{outline:none; border-color:var(--sun); background:#fff}
+.rules{margin:0; padding-left:1.3em; display:grid; gap:clamp(3px,.9vh,10px); font-size:clamp(13px,2.35vh,20px); font-weight:700; line-height:1.45}
+.rules b{color:var(--hot-d)}
+
+/* ---------- 交代画面 ---------- */
+.cover{flex:1; min-height:0; display:grid; place-items:center; padding:12px}
+.cover .box{
+  background:#fff; border-radius:30px; border:5px solid #fff; text-align:center; max-width:640px; width:100%;
+  padding:clamp(14px,3.4vh,34px) clamp(16px,3vw,40px);
+  box-shadow:0 9px 0 rgba(6,78,138,.3), 0 18px 40px rgba(0,40,90,.35);
+}
+.cover .em{font-size:clamp(46px,12vh,100px); line-height:1.1; animation:bob 1.8s ease-in-out infinite}
+.cover h2{margin:.15em 0; font-size:clamp(22px,4.8vh,42px); font-weight:900; color:var(--hot-d)}
+.cover p{margin:.3em 0 1em; color:var(--soft); font-size:clamp(14px,2.6vh,22px); line-height:1.65; font-weight:800}
+
+/* ---------- 盤面 ---------- */
+.slot{flex:1; min-height:0; container-type:size; display:grid; place-items:start center}
+.board{
+  width:min(100cqw,100cqh); height:min(100cqw,100cqh);
+  container-type:inline-size;
+  display:grid; grid-template-columns:repeat(10,1fr); grid-template-rows:repeat(10,1fr); gap:.5cqw;
+}
+.hd,.corner{
+  display:grid; place-items:center; border-radius:22%;
+  background:linear-gradient(180deg,#ffe58a,#ffc83d); color:#7a4300; font-weight:900; font-size:4.6cqw;
+  box-shadow:inset 0 -.5cqw 0 rgba(160,90,0,.25);
+}
+.corner{font-size:2.3cqw; line-height:1.05; text-align:center; background:linear-gradient(180deg,#ff9a4d,#ff6a2b); color:#fff}
+.cell{
+  position:relative; display:grid; place-items:center; border-radius:22%; font-size:4.6cqw; line-height:1;
+  background:linear-gradient(160deg,#c4f4ff,#4cc4ef);
+  border:.35cqw solid rgba(255,255,255,.9);
+  box-shadow:inset 0 -.6cqw 0 rgba(0,90,160,.18);
+}
+.cell.click{cursor:pointer}
+.cell.click:hover{filter:brightness(1.1)}
+.cell.click:active{transform:scale(.9)}
+.cell.ship{border-color:rgba(10,40,80,.4)}
+.s0{background:linear-gradient(160deg,#fff08a,#ffc83d)}
+.s1{background:linear-gradient(160deg,#ffb3a3,#ff6f5a)}
+.s2{background:linear-gradient(160deg,#dccfff,#9d84ee)}
+.s3{background:linear-gradient(160deg,#a8f5c8,#3fcf86)}
+.s4{background:linear-gradient(160deg,#ffc2e6,#ff7fc0)}
+.cell.hit{background:radial-gradient(circle at 50% 45%,#fff3a0 0,#ffb02e 40%,#ff4a2e 85%); border-color:#ff4a2e}
+.cell.sunk{background:linear-gradient(160deg,#7b8aa3,#3b4861); border-color:#1f2a3d}
+.cell.miss{background:linear-gradient(160deg,#f2ffff,#a6e6f7)}
+.cell.miss::after{
+  content:""; position:absolute; width:46%; height:46%; border-radius:50%;
+  border:.6cqw solid rgba(255,255,255,.95); box-shadow:0 0 0 .3cqw rgba(60,170,220,.35);
+}
+.cell.sel{outline:.9cqw solid var(--pink); outline-offset:-.6cqw; animation:pulse .8s ease-in-out infinite alternate}
+.cell.sel.wrong{background:linear-gradient(160deg,#ffd6e3,#ff93b5)}
+.cell.sel.failed{background:linear-gradient(160deg,#e4f3ff,#bcd9ee)}
+.cell.fresh.hit{animation:boom .65s}
+.cell.fresh.miss::after{animation:ripple .8s}
+@keyframes boom{0%{transform:scale(.2) rotate(-25deg);filter:brightness(2.4)}55%{transform:scale(1.35)}100%{transform:scale(1);filter:none}}
+@keyframes ripple{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.7);opacity:.6}}
+@keyframes pulse{to{transform:scale(1.08)}}
+
+/* ---------- 海のカード ---------- */
+.seacard{display:flex; flex-direction:column; gap:clamp(4px,.9vh,10px)}
+.chead{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap}
+.cname{font-weight:900; font-size:clamp(14px,2.7vh,23px); display:flex; align-items:center; gap:.4em}
+.cname .dot{width:.8em; height:.8em; border-radius:50%; background:var(--blue); box-shadow:0 0 0 3px #bfe6fb}
+.q1 .cname .dot{background:var(--hot); box-shadow:0 0 0 3px #ffd2ba}
+.pips{display:flex; gap:5px; align-items:center}
+.pip{display:flex; gap:1px; padding:2px; border-radius:6px; background:#e3f3ff}
+.pip i{width:clamp(5px,1vh,9px); height:clamp(5px,1vh,9px); background:#3aa6e0; border-radius:2px}
+.pip.down{background:#ffd9d0}
+.pip.down i{background:#ff4a2e}
+.tag{
+  position:absolute; top:-13px; right:14px; z-index:2; padding:.15em .9em; border-radius:999px;
+  background:linear-gradient(180deg,#ff9a4d,#ff6a2b); color:#fff; font-weight:900; font-size:clamp(11px,2vh,17px);
+  box-shadow:0 3px 0 var(--hot-d); animation:bob 1s ease-in-out infinite;
+}
+.seacard.target{border-color:var(--sun); animation:glow 1.2s ease-in-out infinite alternate}
+@keyframes glow{
+  from{box-shadow:0 7px 0 rgba(6,78,138,.28), 0 0 0 0 rgba(255,200,61,.0), 0 14px 28px rgba(0,40,90,.28)}
+  to{box-shadow:0 7px 0 rgba(6,78,138,.28), 0 0 0 6px rgba(255,200,61,.7), 0 0 28px 8px rgba(255,200,61,.65)}
+}
+
+/* ---------- 配置画面 ---------- */
+.placegrid{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(270px,32vw,380px); gap:clamp(8px,1.6vw,20px)}
+.side{display:flex; flex-direction:column; justify-content:space-between; gap:clamp(4px,1vh,10px)}
+.side h2{margin:0; font-size:clamp(15px,3vh,26px); font-weight:900; color:var(--hot-d)}
+.side .soft{margin:0; color:var(--soft); font-weight:700; font-size:clamp(12px,2.1vh,17px); line-height:1.4}
+.seg{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.msg{min-height:1.5em; color:var(--pink); font-weight:900; font-size:clamp(12px,2vh,16px)}
+.warn{padding:.35em .8em; border-radius:12px; background:#fff0d6; border:2px dashed var(--hot); color:var(--hot-d); font-weight:900; font-size:clamp(12px,2.1vh,17px); text-align:center}
+.splist{display:flex; flex-wrap:wrap; gap:6px}
+.sp{padding:.2em .7em; border-radius:999px; background:#eef7ff; font-weight:800; font-size:clamp(11px,1.9vh,15px); color:var(--soft)}
+.sp.ok{background:#dff7e8; color:#1f8a52}
+.sp.now{background:#fff0b8; color:#7a4300; box-shadow:0 0 0 2px var(--sun)}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+
+/* ---------- 対戦画面 ---------- */
+.battle{height:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(240px,25vw,330px) minmax(0,1fr); gap:clamp(8px,1.5vw,20px)}
+.panel{display:flex; flex-direction:column; justify-content:center; gap:clamp(5px,1.3vh,14px); overflow:hidden}
+.turn{
+  align-self:center; padding:.25em 1em; border-radius:999px; color:#fff; font-weight:900; font-size:clamp(14px,2.7vh,23px);
+  background:linear-gradient(180deg,#5cc9f5,#1a9be0); box-shadow:0 4px 0 var(--blue-d); text-shadow:0 2px 0 rgba(0,60,120,.4);
+}
+.turn.t1{background:linear-gradient(180deg,#ff9a4d,#ff6a2b); box-shadow:0 4px 0 var(--hot-d); text-shadow:0 2px 0 rgba(150,50,0,.45)}
+.eq{text-align:center; font-weight:900; font-size:clamp(26px,6.2vh,54px); line-height:1.1}
+.eq .ans{display:inline-block; min-width:1.7em; border-bottom:.12em solid var(--sun); color:var(--hot-d)}
+.keys{display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(5px,1vh,10px)}
+.key{
+  --sh:#9cc3e6; font:inherit; font-weight:900; font-size:clamp(18px,3.5vh,30px);
+  height:clamp(36px,7vh,62px); border:0; border-radius:16px; background:#fff; color:var(--ink);
+  box-shadow:0 4px 0 var(--sh), 0 6px 10px rgba(0,40,90,.18); cursor:pointer;
+}
+.key:active{transform:translateY(3px); box-shadow:0 1px 0 var(--sh)}
+.key.fire{--sh:var(--hot-d); background:linear-gradient(180deg,#ff9a4d,#ff6a2b); color:#fff; font-size:clamp(11px,1.9vh,16px); white-space:nowrap; padding:0; text-shadow:0 2px 0 rgba(150,50,0,.45)}
+.key:disabled{opacity:.4}
+.hint{text-align:center; color:var(--soft); font-weight:800; font-size:clamp(12px,2.2vh,18px); line-height:1.55; margin:0}
+.mini{text-align:center; color:var(--soft); font-weight:700; font-size:clamp(10px,1.7vh,14px)}
+.rbig{text-align:center; font-weight:900; font-size:clamp(24px,5.4vh,46px); line-height:1.15; white-space:nowrap; animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.rbig.hit{color:var(--hot); text-shadow:0 3px 0 #ffd27a}
+.rbig.miss{color:var(--blue)}
+.rbig.wrong{color:var(--pink)}
+.rtext{text-align:center; font-weight:800; font-size:clamp(13px,2.4vh,20px); line-height:1.55; margin:0}
+.think{text-align:center; font-weight:900; font-size:clamp(18px,3.6vh,30px)}
+.think span{display:inline-block; animation:bob .9s ease-in-out infinite}
+.think span:nth-child(2){animation-delay:.15s}
+.think span:nth-child(3){animation-delay:.3s}
+@keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-2px)}}
+#app.flash::after{
+  content:""; position:fixed; inset:0; z-index:6; pointer-events:none;
+  background:radial-gradient(circle,rgba(255,220,100,.7),rgba(255,120,40,.25) 55%,transparent 75%);
+  animation:flash .55s forwards;
+}
+@keyframes flash{from{opacity:1}to{opacity:0}}
+
+.modal{position:fixed; inset:0; z-index:20; display:grid; place-items:center; background:rgba(5,40,90,.55); padding:16px}
+.mbox{
+  background:#fff; border-radius:26px; border:5px solid #fff; text-align:center; max-width:460px; width:100%;
+  padding:clamp(14px,3vh,28px) clamp(16px,3vw,34px);
+  box-shadow:0 9px 0 rgba(6,78,138,.3), 0 18px 40px rgba(0,40,90,.4); animation:pop .3s cubic-bezier(.2,1.6,.4,1);
+}
+.mbox h2{margin:0 0 .3em; font-size:clamp(20px,4vh,32px); font-weight:900; color:var(--hot-d)}
+.mbox p{margin:0 0 1em; color:var(--soft); font-weight:800; font-size:clamp(14px,2.4vh,19px); line-height:1.6}
+.mbtns{display:flex; gap:12px; justify-content:center}
+.again{align-self:center; padding:.15em .8em; border-radius:999px; background:#fff0b8; color:#7a4300; font-weight:900; font-size:clamp(11px,2vh,16px); box-shadow:0 0 0 2px var(--sun); animation:bob 1s ease-in-out infinite}
+
+/* ---------- けっか ---------- */
+.endgrid{height:100%; display:grid; grid-template-columns:clamp(240px,26vw,330px) minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto; gap:clamp(6px,1.4vh,16px) clamp(8px,1.5vw,20px)}
+.winner{
+  grid-column:1/-1; text-align:center; color:#fff; font-weight:900; font-size:clamp(24px,6.4vh,56px); line-height:1.1;
+  text-shadow:0 4px 0 var(--hot-d), 0 8px 0 rgba(0,40,90,.35), 0 0 22px rgba(255,255,255,.5); animation:pop .6s cubic-bezier(.2,1.6,.4,1);
+}
+.endbtns{grid-column:1/-1; display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+table.stat{width:100%; border-collapse:collapse; font-weight:800; font-size:clamp(12px,2.2vh,18px)}
+table.stat th,table.stat td{padding:.35em .2em; text-align:center; border-bottom:2px dashed #cfe6f7}
+table.stat th:first-child,table.stat td:first-child{text-align:left; color:var(--soft)}
+.statcard h2{margin:0 0 .3em; font-size:clamp(15px,2.8vh,24px); font-weight:900; color:var(--blue-d)}
+.confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:7}
+.confetti i{position:absolute; top:-24px; width:10px; height:16px; border-radius:2px; animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(760deg)}}
+
+/* ---------- 縦向き ---------- */
+@media (orientation:portrait){
+  .tcols{grid-template-columns:1fr; grid-template-rows:auto auto}
+  .titlegrid{overflow:hidden}
+  .placegrid{grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto}
+  .battle{grid-template-columns:1fr 1fr; grid-template-rows:minmax(0,1fr) auto}
+  .battle .panel{grid-column:1/-1; grid-row:2}
+  .endgrid{grid-template-columns:1fr 1fr; grid-template-rows:auto auto minmax(0,1fr) auto}
+  .endgrid .statcard{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="bubbles" id="bubbles"></div>
+<div class="waves"><i></i><i></i></div>
+<div id="app"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   九九バトルシップゲーム
+   ・ふたりで（同じタブレットで交代／配置のときだけ相手に見せない）
+   ・ひとりで（コンピュータと対戦）
+   ========================================================= */
+const N = 9;
+const SHIPS = [2, 3, 3, 4, 5];
+const LEVELS = [
+  {name: 'よわい', emoji: '🐢', smart: false, parity: false},   // ねらいがバラバラ
+  {name: 'ふつう', emoji: '🐬', smart: true,  parity: false},   // あたったら、まわりをさがす
+  {name: 'つよい', emoji: '🦈', smart: true,  parity: true}     // さらに、ムダなくさがす
+];
+
+const S = {
+  phase: 'title',      // title / placeCover / place / battle / end
+  mode: '1p',          // 1p / 2p
+  level: 1,
+  sound: true,
+  names: ['', ''],
+  boards: [null, null],  // [{id,size,cells,hits}]
+  shots: [null, null],   // shots[p] = pが相手の海に撃った結果
+  stats: null,
+  turn: 0,
+  sub: 'start',        // battle中: start / aim / cpu / result
+  sel: null,
+  input: '',
+  result: null,
+  winner: null,
+  placeP: 0,
+  place: null,
+  fx: '',
+  timer: null,
+  again: false,   // あたったので、もう一回こうげき中
+  modal: null
+};
+
+const $app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const isCpu = p => S.mode === '1p' && p === 1;
+const nm = p => isCpu(p) ? 'コンピュータ' : esc(S.names[p] || ('プレイヤー' + (p + 1)));
+const who = p => isCpu(p) ? 'コンピュータ' : nm(p) + 'さん';
+const emptyGrid = () => Array.from({length: N}, () => Array(N).fill(null));
+const newStats = () => ({attacks: 0, hit: 0, miss: 0, wrong: 0, sunk: 0});
+const rand = n => Math.floor(Math.random() * n);
+
+/* ---------- 効果音（WebAudioで作る） ---------- */
+let AC = null;
+function ac() {
+  if (!S.sound) return null;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    return AC;
+  } catch (e) { return null; }
+}
+function tone(f, d, type, vol, delay, slide) {
+  const a = ac(); if (!a) return;
+  try {
+    const t = a.currentTime + (delay || 0);
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+    g.gain.setValueAtTime(vol || 0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + d);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + d + 0.02);
+  } catch (e) {}
+}
+function boom(d, vol, delay) {
+  const a = ac(); if (!a) return;
+  try {
+    const len = Math.floor(a.sampleRate * d);
+    const buf = a.createBuffer(1, len, a.sampleRate);
+    const dat = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) dat[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+    const s = a.createBufferSource(); s.buffer = buf;
+    const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+    const g = a.createGain(); g.gain.value = vol;
+    s.connect(f); f.connect(g); g.connect(a.destination);
+    s.start(a.currentTime + (delay || 0));
+  } catch (e) {}
+}
+const SFX = {
+  tap()     { tone(700, .05, 'triangle', .07); },
+  place()   { tone(420, .09, 'triangle', .1); tone(630, .09, 'triangle', .08, .06); },
+  correct() { tone(660, .1, 'triangle', .12); tone(990, .16, 'triangle', .12, .09); },
+  wrong()   { tone(240, .3, 'sawtooth', .07, 0, 110); },
+  hit()     { boom(.55, .5); tone(170, .4, 'square', .09, 0, 45); },
+  miss()    { boom(.28, .12); tone(520, .22, 'sine', .08, 0, 200); },
+  sunk()    { boom(.8, .55); tone(120, .7, 'sawtooth', .1, 0, 40); [392, 523, 659].forEach((f, i) => tone(f, .18, 'triangle', .1, .35 + i * .12)); },
+  win()     { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, .24, 'triangle', .14, i * .15)); },
+  lose()    { [392, 330, 262].forEach((f, i) => tone(f, .3, 'triangle', .1, i * .2)); }
+};
+
+/* ---------- 配置ロジック ---------- */
+function canPlace(placed, r, c, size, orient) {
+  const cells = [];
+  for (let i = 0; i < size; i++) {
+    const rr = r + (orient === 'v' ? i : 0);
+    const cc = c + (orient === 'h' ? i : 0);
+    if (rr >= N || cc >= N) return null;
+    if (placed.some(s => s.cells.some(([a, b]) => a === rr && b === cc))) return null;
+    cells.push([rr, cc]);
+  }
+  return cells;
+}
+function randomPlace() {
+  for (;;) {
+    const placed = [];
+    let ok = true;
+    for (let i = 0; i < SHIPS.length && ok; i++) {
+      let cells = null;
+      for (let t = 0; t < 300 && !cells; t++) {
+        cells = canPlace(placed, rand(N), rand(N), SHIPS[i], Math.random() < 0.5 ? 'h' : 'v');
+      }
+      if (!cells) ok = false; else placed.push({id: i, size: SHIPS[i], cells, hits: 0});
+    }
+    if (ok) return placed;
+  }
+}
+
+/* ---------- 盤面の描画 ---------- */
+function boardHTML(o) {
+  const map = Array.from({length: N}, () => Array(N).fill(null));
+  (o.ships || []).forEach(s => s.cells.forEach(([r, c]) => { map[r][c] = s; }));
+  let h = '<div class="board"><div class="corner">九九<br>表</div>';
+  for (let c = 0; c < N; c++) h += `<div class="hd">${c + 1}</div>`;
+  for (let r = 0; r < N; r++) {
+    h += `<div class="hd">${r + 1}</div>`;
+    for (let c = 0; c < N; c++) {
+      const s = map[r][c];
+      const shot = o.shots ? o.shots[r][c] : null;
+      const sunk = s && s.hits === s.size;
+      let cls = 'cell', txt = '';
+      if (s && (o.showShips || sunk)) cls += ` ship s${s.id}`;
+      if (shot === 'hit') { cls += ' hit'; txt = '💥'; }
+      else if (shot === 'miss') { cls += ' miss'; }
+      if (sunk && (o.showShips || shot === 'hit')) cls += ' sunk';
+      if (shot && o.fresh && o.fresh.r === r && o.fresh.c === c) cls += ' fresh';
+      const isSel = o.sel && o.sel.r === r && o.sel.c === c;
+      if (isSel) {
+        cls += ' sel' + (o.selClass ? ' ' + o.selClass : '');
+        if (o.selClass === 'wrong') txt = '❌';
+        if (o.selClass === 'failed') txt = '💨';
+      }
+      const canClick = o.click && !shot;
+      if (canClick) cls += ' click';
+      h += `<div class="${cls}"${canClick ? ` data-act="cell" data-r="${r}" data-c="${c}"` : ''}>${txt}</div>`;
+    }
+  }
+  return h + '</div>';
+}
+
+function pipsHTML(ships) {
+  return '<div class="pips">' + ships.map(s =>
+    `<span class="pip ${s.hits === s.size ? 'down' : ''}">${'<i></i>'.repeat(s.size)}</span>`).join('') + '</div>';
+}
+
+const soundBtn = () => `<button class="btn white icon" data-act="sound" title="おと">${S.sound ? '🔊' : '🔇'}</button>`;
+const topBar = (title, center, right) => `<header class="top"><h1>${title}</h1><div class="topc">${center || ''}</div><div class="topr">${right || ''}${soundBtn()}</div></header>`;
+
+function coverHTML(emoji, title, text, label, act) {
+  return `<div class="fab">${soundBtn()}</div><div class="cover"><div class="box">
+    <div class="em">${emoji}</div>
+    <h2>${title}</h2>
+    <p>${text}</p>
+    <button class="btn hot xl" data-act="${act}">${label}</button>
+  </div></div>`;
+}
+
+/* ---------- 各画面 ---------- */
+function viewTitle() {
+  const two = S.mode === '2p';
+  const names = two
+    ? `<div class="names two">
+         <label>1ばんの人<input id="n0" maxlength="8" placeholder="プレイヤー1" value="${esc(S.names[0])}"></label>
+         <label>2ばんの人<input id="n1" maxlength="8" placeholder="プレイヤー2" value="${esc(S.names[1])}"></label>
+       </div>`
+    : `<div class="names">
+         <label>あなたのなまえ<input id="n0" maxlength="8" placeholder="プレイヤー1" value="${esc(S.names[0])}"></label>
+       </div>
+       <h2>コンピュータの強さ</h2>
+       <div class="seg3">${LEVELS.map((L, i) =>
+         `<button class="btn ${S.level === i ? '' : 'white'}" data-act="level" data-v="${i}">${L.emoji} ${L.name}</button>`).join('')}</div>`;
+  const rules = two
+    ? `<li>はじめに、ひとりずつ<b>相手に見えないように</b>潜水艦をかくす。</li>
+       <li>そのあとは、<b>同じ画面をふたりで見ながら</b>こうたいで対戦！</li>
+       <li>相手の海のマスをタップして、<b>そのマスの九九の答え</b>を入れよう。</li>
+       <li>正解ならこうげき成功！ <b>あたったら、もう一回</b>こうげきできるよ。まちがえたら番がうつるよ。</li>
+       <li>先に相手の潜水艦<b>5隻</b>をぜんぶ沈めたら勝ち！</li>`
+    : `<li>まず、自分の潜水艦をかくそう。</li>
+       <li><b>自分の番</b>：相手の海のマスをタップして、そのマスの九九の答えを入れてこうげき！ <b>あたったら、もう一回</b>！</li>
+       <li><b>コンピュータの番</b>：コンピュータがえらんだマスの九九にこたえよう。こたえると、こうげきがとどくよ。</li>
+       <li>先に相手の潜水艦<b>5隻</b>をぜんぶ沈めたら勝ち！</li>`;
+  return `<div class="fab">${soundBtn()}</div><main class="main"><div class="titlegrid">
+    <div class="hero">
+      <div class="logo">🚢💥🌊</div>
+      <h1>九九バトルシップゲーム</h1>
+      <p class="lead">九九をこたえて、かくれた潜水艦をうちしずめろ！</p>
+    </div>
+    <div class="tcols">
+      <div class="card tcard">
+        <h2>あそびかた</h2>
+        <div class="seg2">
+          <button class="btn ${S.mode === '1p' ? '' : 'white'}" data-act="mode" data-v="1p">🤖 ひとりで<small>コンピュータと対戦</small></button>
+          <button class="btn ${S.mode === '2p' ? '' : 'white'}" data-act="mode" data-v="2p">👫 ふたりで<small>同じタブレットで対戦</small></button>
+        </div>
+        ${names}
+        <div style="text-align:center"><button class="btn hot xl" data-act="start">バトルスタート！</button></div>
+      </div>
+      <div class="card tcard">
+        <h2>ルール</h2>
+        <ol class="rules">${rules}</ol>
+      </div>
+    </div>
+  </div></main>`;
+}
+
+function viewPlaceCover() {
+  const p = S.placeP;
+  if (p === 0) {
+    return coverHTML('🤫', `${who(0)}から、潜水艦をかくすよ`,
+      `${who(1)}は、画面を見ないでね！`, `${who(0)}、じゅんびOK！`, 'ready-place');
+  }
+  return coverHTML('🔄', `${who(1)}の番だよ`,
+    `${who(0)}の配置はおわったよ。<br>タブレットを${who(1)}にわたしてね。<br>${who(0)}は画面を見ないでね！`,
+    `${who(1)}、じゅんびOK！`, 'ready-place');
+}
+
+function viewPlace() {
+  const P = S.place, p = P.p;
+  const idx = P.placed.length;
+  const done = idx === SHIPS.length;
+  const list = SHIPS.map((sz, i) =>
+    `<span class="sp ${i < idx ? 'ok' : (i === idx ? 'now' : '')}">${i < idx ? '✅' : (i === idx ? '👉' : '○')} ${sz}マス</span>`).join('');
+  const title = S.mode === '2p' ? `⚓ ${who(p)}、潜水艦をかくそう` : '⚓ 潜水艦を配置しよう';
+  return topBar(title, '', '<button class="btn white sm" data-act="quit">はじめにもどる</button>') + `
+    <main class="main"><div class="placegrid">
+      <section class="card seacard">
+        <div class="chead"><div class="cname"><span class="dot"></span>${S.mode === '2p' ? who(p) + 'の海' : '自分の海'}</div></div>
+        <div class="slot">${boardHTML({ships: P.placed, showShips: true, click: !done})}</div>
+      </section>
+      <section class="card side">
+        ${S.mode === '2p' ? `<div class="warn">👀 ${who(1 - p)}は見ないでね！</div>` : ''}
+        <h2>${done ? 'ぜんぶ置けたよ！' : `${SHIPS[idx]}マス潜水艦を置こう`}</h2>
+        <div class="seg">
+          <button class="btn sm ${P.orient === 'h' ? '' : 'white'}" data-act="orient" data-v="h">↔ 横向き</button>
+          <button class="btn sm ${P.orient === 'v' ? '' : 'white'}" data-act="orient" data-v="v">↕ 縦向き</button>
+        </div>
+        <p class="soft">${done ? '「これでOK！」をおしてね。' : '盤面の「はじまりのマス」をタップ！（右か下にのびるよ）'}</p>
+        <div class="msg">${esc(P.msg)}</div>
+        <div class="splist">${list}</div>
+        <div class="grid2">
+          <button class="btn white sm" data-act="undo" ${idx === 0 ? 'disabled' : ''}>↩ ひとつもどす</button>
+          <button class="btn white sm" data-act="reset-place">🔄 最初から</button>
+        </div>
+        <button class="btn blue sm" data-act="random">🎲 おまかせで置く</button>
+        <button class="btn hot" data-act="done-place" ${done ? '' : 'disabled'}>✅ これでOK！</button>
+      </section>
+    </div></main>`;
+}
+
+function seaCard(q) {
+  const target = S.turn !== q;               // いま、こうげきされている側
+  const aim = S.sub === 'aim';
+  const res = S.result;
+  const showRes = S.sub === 'result' && target && res;
+  const fresh = showRes && res.type !== 'wrong' ? {r: res.r, c: res.c} : null;
+  const selClass = showRes ? (res.type === 'wrong' ? 'wrong' : (res.type === 'failed' ? 'failed' : '')) : '';
+  const sel = target && (aim || S.sub === 'defend' || S.sub === 'result') ? S.sel : null;
+  const label = isCpu(q) ? 'コンピュータの海' : (S.mode === '1p' ? '自分の海' : `${who(q)}の海`);
+  return `<section class="card seacard q${q} ${target ? 'target' : ''}">
+    ${target ? `<div class="tag">${isCpu(S.turn) ? '⚠ ねらわれてる！' : '▶ ここをこうげき！'}</div>` : ''}
+    <div class="chead"><div class="cname"><span class="dot"></span>${label}</div>${pipsHTML(S.boards[q])}</div>
+    <div class="slot">${boardHTML({
+      ships: S.boards[q], shots: S.shots[1 - q],
+      showShips: S.mode === '1p' && q === 0,
+      click: aim && target, sel, selClass, fresh
+    })}</div>
+  </section>`;
+}
+
+function panelHTML() {
+  const p = S.turn;
+  const turnBadge = `<div class="turn ${p === 1 ? 't1' : ''}">${isCpu(p) ? '🤖' : '🎯'} ${who(p)}の番</div>` + (S.again && S.sub !== 'result' ? '<div class="again">🔥 あたったから もう一回！</div>' : '');
+  const axis = '<div class="mini">ヨコ＝かけられる数　タテ＝かける数</div>';
+
+  if (S.sub === 'cpu') {
+    return `${turnBadge}<div class="think">🤖 どこをねらおうかな<span>.</span><span>.</span><span>.</span></div>${axis}`;
+  }
+
+  if (S.sub === 'aim' || S.sub === 'defend') {
+    const defend = S.sub === 'defend';
+    if (!S.sel) {
+      return `${turnBadge}<p class="hint">光っている<br>「${who(1 - p)}の海」の<br>マスをタップして、<br>そのマスの九九の答えを<br>こたえよう！</p>${axis}`;
+    }
+    const a = S.sel.c + 1, b = S.sel.r + 1;
+    const keys = [7, 8, 9, 4, 5, 6, 1, 2, 3].map(n => `<button class="key" data-act="key" data-v="${n}">${n}</button>`).join('');
+    return `${turnBadge}
+      ${defend ? '<p class="hint" style="font-size:clamp(12px,2.2vh,18px)">🤖 ここをねらってる！<br>九九にこたえると、こうげきがとどくよ！</p>' : ''}
+      <div class="eq">${a} × ${b} = <span class="ans">${S.input || '?'}</span></div>
+      <div class="keys">${keys}
+        <button class="key" data-act="del">⌫</button>
+        <button class="key" data-act="key" data-v="0">0</button>
+        <button class="key fire" data-act="fire" ${S.input === '' ? 'disabled' : ''}>${defend ? 'こたえる！' : 'こうげき！'}</button>
+      </div>
+      <div class="mini">${defend ? 'まちがえると、こうげきは しっぱいになるよ' : 'ちがうマスにしたいときは、もういちどタップ'}</div>`;
+  }
+
+  /* result */
+  const res = S.result, cpu = isCpu(p);
+  const a = res.c + 1, b = res.r + 1;
+  let big = '', cls = '', text = '';
+  if (cpu) {
+    if (res.type === 'failed') {
+      big = '💨 しっぱい！'; cls = 'miss';
+      text = `${a}×${b}＝<b>${res.correct}</b> だよ。（あなたの答え ${res.given}）<br>答えがちがうので、<br>コンピュータのこうげきは しっぱい！`;
+    } else if (res.type === 'hit') {
+      big = res.sunk ? '💥 撃沈された…' : '💥 やられた！'; cls = 'hit';
+      text = `${a}×${b}＝${res.correct}　せいかい！<br>` + (res.sunk ? `こうげきがとどいて、<br><b>${res.size}マスの潜水艦</b>がしずんだ…` : 'こうげきがとどいて、<br>潜水艦にあたっちゃった…');
+    } else {
+      big = '🌊 はずれ！'; cls = 'miss';
+      text = `${a}×${b}＝${res.correct}　せいかい！<br>コンピュータのこうげきは、<br>はずれたよ。`;
+    }
+  } else if (res.type === 'hit') {
+    big = res.sunk ? '💥 撃沈！' : '💥 命中！'; cls = 'hit';
+    text = `${a}×${b}＝${res.correct}　せいかい！<br>` + (res.sunk ? `<b>${res.size}マスの潜水艦</b>をしずめた！` : '潜水艦にあたった！');
+  } else if (res.type === 'miss') {
+    big = '🌊 はずれ…'; cls = 'miss';
+    text = `${a}×${b}＝${res.correct}　せいかい！<br>でも、ここに潜水艦はいなかったよ。`;
+  } else {
+    big = '😢 おしい！'; cls = 'wrong';
+    text = `${a}×${b}＝<b>${res.correct}</b> だよ。<br>こうげきできずに、番がうつるよ。`;
+  }
+  let label;
+  const again = res.type === 'hit' && S.winner === null;
+  if (S.winner !== null) { text += S.winner === 1 && cpu ? '<br>ぜんぶ沈められちゃった…' : '<br>🎉 ぜんぶ沈めた！'; label = 'けっかを見る'; }
+  else if (again) {
+    text += cpu ? '<br>🔥 コンピュータが もう一回！' : '<br>🔥 あたったから、もう一回こうげき！';
+    label = cpu ? 'つぎへ' : 'もういちど こうげき！';
+  }
+  else label = isCpu(1 - p) ? 'コンピュータの番へ' : (cpu ? 'つぎは あなたの番' : `つぎは${who(1 - p)}の番`);
+  return `${turnBadge}<div class="rbig ${cls}">${big}</div><p class="rtext">${text}</p>
+    <div style="text-align:center"><button class="btn hot" data-act="next">${label}</button></div>`;
+}
+
+function viewBattle() {
+  if (S.sub === 'start') {
+    const first = S.turn;
+    const text = S.mode === '2p'
+      ? `ここからは、ふたりで<b>同じ画面</b>を見ながらたたかうよ。<br>先こうは <b>${who(first)}</b>！`
+      : `先こうは <b>${who(first)}</b>！<br>九九をこたえて、コンピュータの潜水艦をしずめよう！`;
+    return coverHTML('⚔️', 'バトルスタート！', text, 'スタート！', 'ready-battle');
+  }
+  return topBar('🌊 九九バトルシップゲーム', '', '<button class="btn white sm" data-act="quit">やり直す</button>') + `
+    <main class="main"><div class="battle ${S.fx === 'flash hit' ? 'shake' : ''}">
+      ${seaCard(0)}
+      <section class="card panel">${panelHTML()}</section>
+      ${seaCard(1)}
+    </div></main>`;
+}
+
+function confettiHTML() {
+  const cols = ['#ffc83d', '#ff4f87', '#4cc4ef', '#6be08f', '#ff7a2f', '#b69cff'];
+  let h = '<div class="confetti">';
+  for (let i = 0; i < 48; i++) {
+    h += `<i style="left:${rand(100)}%;background:${cols[rand(cols.length)]};animation-delay:${(Math.random() * 1.6).toFixed(2)}s;animation-duration:${(2.4 + Math.random() * 2).toFixed(2)}s;transform:rotate(${rand(360)}deg)"></i>`;
+  }
+  return h + '</div>';
+}
+
+function viewEnd() {
+  const w = S.winner;
+  const humanWon = !isCpu(w);
+  const row = (label, f) => `<tr><td>${label}</td><td>${f(S.stats[0], 0)}</td><td>${f(S.stats[1], 1)}</td></tr>`;
+  const head = humanWon ? `🎉 ${who(w)}の勝ち！ 🎉` : '🤖 コンピュータの勝ち！ もういちどちょうせん！';
+  const seaName = q => isCpu(q) ? 'コンピュータの海' : `${who(q)}の海`;
+  return topBar('🌊 九九バトルシップゲーム', '', '') + (humanWon ? confettiHTML() : '') + `
+    <main class="main"><div class="endgrid">
+      <div class="winner">${head}</div>
+      <section class="card statcard">
+        <h2>きろく</h2>
+        <table class="stat">
+          <tr><th></th><th>${nm(0)}</th><th>${nm(1)}</th></tr>
+          ${row('こうげき', s => s.attacks + '回')}
+          ${row('命中', s => s.hit)}
+          ${row('はずれ', s => s.miss)}
+          ${row('答えまちがい', (s, i) => (S.mode === '1p' && i === 1) ? '－' : s.wrong)}
+          ${row('撃沈', s => s.sunk + '/' + SHIPS.length)}
+        </table>
+      </section>
+      ${[0, 1].map(q => `<section class="card seacard q${q}">
+        <div class="chead"><div class="cname"><span class="dot"></span>${seaName(q)}</div>${pipsHTML(S.boards[q])}</div>
+        <div class="slot">${boardHTML({ships: S.boards[q], shots: S.shots[1 - q], showShips: true, click: false})}</div>
+      </section>`).join('')}
+      <div class="endbtns">
+        <button class="btn hot xl" data-act="rematch">もういちど あそぶ</button>
+        <button class="btn white xl" data-act="home">はじめにもどる</button>
+      </div>
+    </div></main>`;
+}
+
+/* ---------- 描画 ---------- */
+function render() {
+  let h = '';
+  if (S.phase === 'title') h = viewTitle();
+  else if (S.phase === 'placeCover') h = viewPlaceCover();
+  else if (S.phase === 'place') h = viewPlace();
+  else if (S.phase === 'battle') h = viewBattle();
+  else if (S.phase === 'end') h = viewEnd();
+  if (S.modal === 'quit') {
+    h += `<div class="modal"><div class="mbox">
+      <h2>やり直す？</h2>
+      <p>はじめの画面にもどるよ。<br>いまのゲームは消えるけど、いいかな？</p>
+      <div class="mbtns"><button class="btn white" data-act="modal-no">もどる</button><button class="btn hot" data-act="modal-yes">やり直す</button></div>
+    </div></div>`;
+  }
+  $app.className = S.fx;
+  $app.innerHTML = h;
+}
+
+/* ---------- ゲーム進行 ---------- */
+function clearTimer() { if (S.timer) { clearTimeout(S.timer); S.timer = null; } }
+
+function begin() {
+  clearTimer();
+  S.boards = [null, null];
+  S.shots = [emptyGrid(), emptyGrid()];
+  S.stats = [newStats(), newStats()];
+  S.winner = null; S.sel = null; S.input = ''; S.result = null; S.fx = ''; S.again = false; S.modal = null;
+  S.placeP = 0;
+  if (S.mode === '1p') {
+    S.place = {p: 0, placed: [], orient: 'h', msg: ''};
+    S.phase = 'place';
+  } else {
+    S.phase = 'placeCover';
+  }
+}
+
+function startBattle() {
+  S.phase = 'battle';
+  S.sub = 'start';
+  S.turn = S.mode === '1p' ? 0 : rand(2);
+  S.sel = null; S.input = ''; S.result = null; S.fx = ''; S.again = false;
+}
+
+function placeShip(r, c) {
+  const P = S.place;
+  if (P.placed.length >= SHIPS.length) return;
+  const size = SHIPS[P.placed.length];
+  const cells = canPlace(P.placed, r, c, size, P.orient);
+  if (!cells) { P.msg = 'そこには置けないよ（はみだすか、かさなるよ）'; SFX.wrong(); render(); return; }
+  P.placed.push({id: P.placed.length, size, cells, hits: 0});
+  P.msg = '';
+  SFX.place();
+  render();
+}
+
+const canType = () => !S.modal && S.phase === 'battle' && (S.sub === 'aim' || S.sub === 'defend') && S.sel;
+function pressKey(v) {
+  if (!canType()) return;
+  if (S.input === '' && v === '0') return;
+  if (S.input.length < 2) S.input += v;
+  SFX.tap();
+  render();
+}
+function delKey() {
+  if (!canType()) return;
+  S.input = S.input.slice(0, -1);
+  SFX.tap();
+  render();
+}
+
+/* 攻撃の判定（人もコンピュータも同じ） */
+function resolveAttack(p, r, c, given) {
+  const o = 1 - p;
+  const correct = (r + 1) * (c + 1);
+  const st = S.stats[p];
+  st.attacks++;
+  S.fx = '';
+  if (given !== correct) {
+    st.wrong++;
+    S.result = {type: 'wrong', r, c, correct, given};
+    SFX.wrong();
+    return;
+  }
+  const ship = S.boards[o].find(s => s.cells.some(([a, b]) => a === r && b === c));
+  SFX.correct();
+  if (!ship) {
+    S.shots[p][r][c] = 'miss'; st.miss++;
+    S.result = {type: 'miss', r, c, correct, given};
+    setTimeout(SFX.miss, 280);
+  } else {
+    S.shots[p][r][c] = 'hit'; st.hit++;
+    ship.hits++;
+    const sunk = ship.hits === ship.size;
+    if (sunk) st.sunk++;
+    S.result = {type: 'hit', r, c, correct, given, sunk, size: ship.size};
+    S.fx = 'flash hit';
+    setTimeout(sunk ? SFX.sunk : SFX.hit, 280);
+    if (st.sunk === SHIPS.length) S.winner = p;
+  }
+}
+
+function fire() {
+  if (!canType() || S.input === '') return;
+  if (S.sub === 'defend') resolveDefense(S.sel.r, S.sel.c, Number(S.input));
+  else resolveAttack(S.turn, S.sel.r, S.sel.c, Number(S.input));
+  S.sub = 'result';
+  render();
+}
+
+/* コンピュータのこうげき：コンピュータがえらんだマスの九九に、人がこたえる
+   正解 → こうげきがとどく（あたれば爆発）／ まちがい → こうげきは しっぱい */
+function resolveDefense(r, c, given) {
+  const correct = (r + 1) * (c + 1);
+  const st = S.stats[1], me = S.stats[0];
+  st.attacks++;
+  S.fx = '';
+  if (given !== correct) {
+    me.wrong++;
+    S.result = {type: 'failed', r, c, correct, given};
+    SFX.wrong();
+    return;
+  }
+  SFX.correct();
+  const ship = S.boards[0].find(s => s.cells.some(([a, b]) => a === r && b === c));
+  if (!ship) {
+    S.shots[1][r][c] = 'miss'; st.miss++;
+    S.result = {type: 'miss', r, c, correct, given};
+    setTimeout(SFX.miss, 280);
+  } else {
+    S.shots[1][r][c] = 'hit'; st.hit++;
+    ship.hits++;
+    const sunk = ship.hits === ship.size;
+    if (sunk) st.sunk++;
+    S.result = {type: 'hit', r, c, correct, given, sunk, size: ship.size};
+    S.fx = 'flash hit';
+    setTimeout(sunk ? SFX.sunk : SFX.hit, 280);
+    if (st.sunk === SHIPS.length) S.winner = 1;
+  }
+}
+
+/* ---------- コンピュータ ---------- */
+function cpuPick() {
+  const sh = S.shots[1], ships = S.boards[0], L = LEVELS[S.level];
+  const free = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!sh[r][c]) free.push([r, c]);
+  if (L.smart) {
+    const cand = [];
+    ships.forEach(s => {
+      if (s.hits >= s.size) return;
+      s.cells.forEach(([r, c]) => {
+        if (sh[r][c] !== 'hit') return;
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dr, dc]) => {
+          const rr = r + dr, cc = c + dc;
+          if (rr >= 0 && rr < N && cc >= 0 && cc < N && !sh[rr][cc]) cand.push([rr, cc]);
+        });
+      });
+    });
+    if (cand.length) return cand[rand(cand.length)];
+    if (L.parity) {
+      const par = free.filter(([r, c]) => (r + c) % 2 === 0);
+      if (par.length) return par[rand(par.length)];
+    }
+  }
+  return free[rand(free.length)];
+}
+
+function cpuTurn() {
+  S.sub = 'cpu'; S.sel = null; S.input = ''; S.result = null; S.fx = '';
+  render();
+  clearTimer();
+  S.timer = setTimeout(cpuFire, 1100);
+}
+
+/* コンピュータが場所を決めて、その九九を人にたずねる */
+function cpuFire() {
+  if (S.phase !== 'battle' || S.sub !== 'cpu' || S.turn !== 1) return;
+  const [r, c] = cpuPick();
+  S.sel = {r, c}; S.input = '';
+  S.sub = 'defend';
+  SFX.tap();
+  render();
+}
+
+/* ---------- 操作 ---------- */
+function readNames() {
+  const a = document.getElementById('n0'), b = document.getElementById('n1');
+  if (a) S.names[0] = a.value.trim();
+  if (b) S.names[1] = b.value.trim();
+}
+
+function act(a, d) {
+  switch (a) {
+    case 'sound':
+      S.sound = !S.sound; if (S.sound) SFX.tap(); render(); break;
+    case 'mode': readNames(); S.mode = d.v; SFX.tap(); render(); break;
+    case 'level': readNames(); S.level = +d.v; SFX.tap(); render(); break;
+    case 'start':
+      readNames();
+      if (S.mode === '2p' && S.names[0] && S.names[0] === S.names[1]) S.names[1] += '（2）';
+      SFX.tap(); begin(); render(); break;
+    case 'ready-place':
+      SFX.tap();
+      S.place = {p: S.placeP, placed: [], orient: 'h', msg: ''};
+      S.phase = 'place'; render(); break;
+    case 'orient': S.place.orient = d.v; S.place.msg = ''; SFX.tap(); render(); break;
+    case 'cell': {
+      const r = +d.r, c = +d.c;
+      if (S.phase === 'place') placeShip(r, c);
+      else if (S.phase === 'battle' && S.sub === 'aim') { S.sel = {r, c}; S.input = ''; SFX.tap(); render(); }
+      break;
+    }
+    case 'undo': S.place.placed.pop(); S.place.msg = ''; SFX.tap(); render(); break;
+    case 'reset-place': S.place.placed = []; S.place.msg = ''; SFX.tap(); render(); break;
+    case 'random': S.place.placed = randomPlace(); S.place.msg = ''; SFX.place(); render(); break;
+    case 'done-place':
+      if (S.place.placed.length !== SHIPS.length) break;
+      SFX.tap();
+      S.boards[S.place.p] = S.place.placed;
+      if (S.mode === '1p') { S.boards[1] = randomPlace(); startBattle(); }
+      else if (S.place.p === 0) { S.placeP = 1; S.phase = 'placeCover'; }
+      else startBattle();
+      render(); break;
+    case 'ready-battle':
+      SFX.tap();
+      if (isCpu(S.turn)) cpuTurn();
+      else { S.sub = 'aim'; S.sel = null; S.input = ''; render(); }
+      break;
+    case 'key': pressKey(d.v); break;
+    case 'del': delKey(); break;
+    case 'fire': fire(); break;
+    case 'next': {
+      clearTimer();
+      const keep = S.result && S.result.type === 'hit' && S.winner === null;   // あたったら、もう一回
+      S.sel = null; S.input = ''; S.result = null; S.fx = '';
+      if (S.winner !== null) {
+        S.again = false;
+        S.phase = 'end';
+        render();
+        if (isCpu(S.winner)) SFX.lose(); else SFX.win();
+        break;
+      }
+      S.again = keep;
+      if (!keep) S.turn = 1 - S.turn;
+      if (isCpu(S.turn)) cpuTurn();
+      else { S.sub = 'aim'; render(); }
+      break;
+    }
+    case 'quit': S.modal = 'quit'; render(); break;
+    case 'modal-no': S.modal = null; render(); break;
+    case 'modal-yes': clearTimer(); S.modal = null; S.fx = ''; S.again = false; S.phase = 'title'; render(); break;
+    case 'rematch': SFX.tap(); begin(); render(); break;
+    case 'home': clearTimer(); S.fx = ''; S.again = false; S.phase = 'title'; render(); break;
+  }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t || t.disabled) return;
+  act(t.dataset.act, t.dataset);
+});
+
+/* パソコン（Chromebook）のキーボードでも入力できる */
+document.addEventListener('keydown', e => {
+  if (!canType()) return;
+  if (/^[0-9]$/.test(e.key)) pressKey(e.key);
+  else if (e.key === 'Backspace') delKey();
+  else if (e.key === 'Enter') fire();
+});
+
+/* 背景の泡 */
+(function () {
+  const box = document.getElementById('bubbles');
+  if (!box) return;
+  let h = '';
+  for (let i = 0; i < 16; i++) {
+    const s = 10 + rand(34);
+    h += `<i style="left:${rand(100)}%;width:${s}px;height:${s}px;animation-duration:${9 + rand(12)}s;animation-delay:-${rand(14)}s"></i>`;
+  }
+  box.innerHTML = h;
+})();
+
+render();
+</script>
+</body>
+</html>
